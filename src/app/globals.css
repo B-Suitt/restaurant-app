@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/*
+ * Tokens de diseño extraídos de los frames de Figma (no hay variables en el archivo).
+ * Cada token genera clases de Tailwind: --color-primary → bg-primary, text-primary, etc.
+ */
+@theme {
+  /* Tipografía */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Escala de texto de Figma; interlineado 1.4 en todo el diseño */
+  --text-*: initial;
+  --text-2xs: 0.625rem; /* 10px · navegación inferior, rótulos */
+  --text-2xs--line-height: 1.4;
+  --text-xs: 0.6875rem; /* 11px · chips, encabezados de tabla */
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.75rem; /* 12px · texto secundario */
+  --text-sm--line-height: 1.4;
+  --text-md: 0.8125rem; /* 13px · etiquetas, celdas */
+  --text-md--line-height: 1.4;
+  --text-base: 0.875rem; /* 14px · cuerpo, botones, inputs */
+  --text-base--line-height: 1.4;
+  --text-lg: 1rem; /* 16px · nombre de plato, título de tarjeta */
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.25rem; /* 20px · título de cabecera */
+  --text-xl--line-height: 1.4;
+  --text-2xl: 1.5rem; /* 24px · título de modal */
+  --text-2xl--line-height: 1.4;
+  --text-3xl: 1.875rem; /* 30px · título de página admin */
+  --text-3xl--line-height: 1.4;
+  --text-4xl: 2.125rem; /* 34px · título de bienvenida / login */
+  --text-4xl--line-height: 1.4;
+
+  /* Marca */
+  --color-primary: #d92d2d;
+  --color-primary-hover: #c22525;
+  --color-primary-soft: #fff0ef;
+
+  /* Neutros */
+  --color-ink: #161616; /* texto principal, chip activo, avatar */
+  --color-muted: #737373; /* texto secundario */
+  --color-subtle: #a3a3a3; /* placeholder */
+  --color-border: #e7e7e7;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f6f6; /* fondo admin/cocina, botones de icono */
+  --color-surface-subtle: #fafafa; /* encabezado de tabla, nota vacía */
+  --color-overlay: rgb(0 0 0 / 0.44);
+
+  /* Tonos de chip (estados del pedido y otros estados) */
+  --color-warning-bg: #fff5dc; /* Recibido, Llamando, nota de cocina */
+  --color-warning-fg: #9a6200;
+  --color-info-bg: #edf3ff; /* En preparación */
+  --color-info-fg: #2459ad;
+  --color-success-bg: #eaf7ef; /* Listo para entregar, Activo */
+  --color-success-fg: #187447;
+  --color-neutral-bg: #efefef; /* Entregado, Inactivo, Agotado */
+  --color-neutral-fg: #616161;
+  --color-danger-bg: #fff0ef; /* Cancelado (no está en Figma) */
+  --color-danger-fg: #d92d2d;
+
+  /* Radios */
+  --radius-xs: 6px; /* chips, notas */
+  --radius-sm: 8px; /* inputs, emblema */
+  --radius-md: 10px; /* botones de icono, ítems de menú */
+  --radius-lg: 12px; /* botones, tarjetas, tablas */
+  --radius-xl: 20px; /* modales */
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
