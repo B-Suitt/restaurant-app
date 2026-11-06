@@ -62,6 +62,12 @@ Seguir el mismo estilo visual para:
 - Desarrollo: `npm run dev`
 - Build: `npm run build`
 - Lint: `npm run lint`
+- Supabase local (requiere Docker Desktop abierto): `npx supabase start` · `npx supabase stop`
+- Reiniciar base con migraciones y datos de prueba: `npx supabase db reset`
+- Tests de base de datos: `npm run db:test`
+- Regenerar tipos tras cambiar el esquema: `npm run db:types`
+- Usuarios de prueba (contraseña `restaurante123`): `admin@`, `garzon@`, `cocina@restaurante.cl`.
+  QR de prueba: `/m/mesa-01` … `/m/mesa-08`.
 
 ## Rutas
 

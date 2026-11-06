@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-export type ChipTone = "warning" | "info" | "success" | "neutral" | "danger";
+export type ChipTone = "warning" | "info" | "success" | "neutral" | "accent" | "danger";
 
 const tones: Record<ChipTone, string> = {
   warning: "bg-warning-bg text-warning-fg",
   info: "bg-info-bg text-info-fg",
   success: "bg-success-bg text-success-fg",
   neutral: "bg-neutral-bg text-neutral-fg",
+  accent: "bg-accent-bg text-accent-fg",
   danger: "bg-danger-bg text-danger-fg",
 };
 

@@ -55,6 +55,8 @@
   --color-success-fg: #187447;
   --color-neutral-bg: #efefef; /* Entregado, Inactivo, Agotado */
   --color-neutral-fg: #616161;
+  --color-accent-bg: #f3eefe; /* Pidiendo la cuenta · APROXIMADO, verificar en Figma */
+  --color-accent-fg: #6d3fc0;
   --color-danger-bg: #fff0ef; /* Cancelado (no está en Figma) */
   --color-danger-fg: #d92d2d;
 

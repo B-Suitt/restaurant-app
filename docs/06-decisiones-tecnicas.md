@@ -12,6 +12,10 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 | 2026-11-06 | Permisos con políticas RLS | Seguridad en la base de datos, no solo en el frontend |
 | 2026-11-06 | Sin pagos en el MVP | Reducir alcance; el cobro se hace fuera de la app |
 | 2026-11-06 | Estado por plato, no por pedido | Cocina prepara platos a distinto ritmo; mejor trazabilidad |
+| 2026-11-06 | Cliente con Supabase Anonymous Sign-In + tabla `session_guests` | RLS y Realtime filtran por mesa sin código extra; el cliente no se registra |
+| 2026-11-06 | Escrituras operativas solo por funciones RPC | Precios, roles y transiciones se validan en la base de datos, no en el frontend |
+| 2026-11-06 | Sin garzón asignado por mesa en el MVP | Los llamados llegan a todos los garzones; se registra quién atendió |
+| 2026-11-06 | Supabase local con Docker para desarrollo | Gratis, se resetea con un comando y los tests no tocan datos reales |
 
 ## Notas de implementación
 
@@ -21,6 +25,12 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
   listos y llamados.
 - Realtime respeta RLS: si un rol no puede leer una fila, no recibe su cambio.
 - Al reconectar, recargar el estado actual; los cambios ocurridos sin conexión no se reenvían.
+- Cargar los datos *después* de que el canal quede `SUBSCRIBED`: en las pruebas, cambios
+  hechos justo al suscribirse se perdieron.
+
+### Auth
+- El registro por correo queda habilitado en Supabase porque el inicio anónimo lo
+  necesita. No es un riesgo: una cuenta sin fila en `profiles` no tiene permisos de personal.
 
 ### Particularidades de la web
 - Los navegadores bloquean el sonido hasta la primera interacción: botón "Comenzar turno"

@@ -8,7 +8,8 @@ Precios en CLP como enteros.
 ```
 tables 1──N table_sessions 1──N orders 1──N order_items 1──N order_item_events
                      │                           │
-                     └──N waiter_calls           └──N order_item_extras N──1 dish_extras
+                     ├──N waiter_calls           └──N order_item_extras N──1 dish_extras
+                     └──N session_guests (celulares de clientes)
 
 categories 1──N dishes 1──N dish_extras
 profiles (personal: admin, garzón, cocina)
@@ -24,6 +25,7 @@ Mesas del local.
 | id | uuid | PK |
 | number | int | Número visible de la mesa, único |
 | capacity | int | Cantidad de personas |
+| zone | text | Zona del local (Salón, Terraza); filtro en la vista del garzón |
 | qr_token | text | Único; va en la URL del QR |
 | active | boolean | Una mesa inactiva no acepta pedidos |
 
@@ -35,11 +37,22 @@ Cada estadía de clientes en una mesa. Agrupa todos los pedidos en una cuenta.
 | id | uuid | PK |
 | table_id | uuid | FK → tables |
 | status | text | `open` \| `closed` |
+| guest_count | int | Cantidad de personas; opcional |
 | opened_at | timestamptz | |
 | closed_at | timestamptz | Nulo mientras está abierta |
 | closed_by | uuid | FK → profiles (garzón que cerró) |
 
 Restricción: una sola sesión `open` por mesa.
+
+### session_guests
+Celulares de clientes (usuarios anónimos de Supabase Auth) unidos a una sesión.
+Permite que RLS y Realtime le muestren a cada cliente solo su mesa.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| session_id | uuid | PK, FK → table_sessions |
+| user_id | uuid | PK, FK → auth.users |
+| joined_at | timestamptz | |
 
 ### categories
 
@@ -63,6 +76,7 @@ Restricción: una sola sesión `open` por mesa.
 | photo_url | text | Supabase Storage |
 | available | boolean | Falso = agotado |
 | featured | boolean | Plato sugerido o destacado |
+| sort_order | int | Orden dentro de la categoría |
 
 ### dish_extras
 Adicionales de un plato.
@@ -80,6 +94,7 @@ Cada ronda enviada a cocina.
 | Columna | Tipo | Notas |
 |---|---|---|
 | id | uuid | PK |
+| number | int | Correlativo visible ("Pedido #1042"), desde 1001 |
 | session_id | uuid | FK → table_sessions |
 | created_by | uuid | FK → profiles; nulo si lo envió el cliente |
 | created_at | timestamptz | |
@@ -134,6 +149,7 @@ Personal del local, vinculado a Supabase Auth.
 |---|---|---|
 | id | uuid | PK, = auth.users.id |
 | name | text | |
+| email | text | Copia del correo de Auth, para listarlo en el admin |
 | role | text | `admin` \| `waiter` \| `kitchen` |
 | active | boolean | Desactivado = no puede entrar |
 
@@ -143,3 +159,18 @@ Personal del local, vinculado a Supabase Auth.
   no cancelados de la sesión.
 - Los precios se copian al ítem al pedir, para que un cambio de precio en el menú no
   altere cuentas abiertas ni el historial.
+
+## Escrituras y funciones (RPC)
+
+El esquema vive en `supabase/migrations/`. Las tablas operativas no tienen políticas de
+escritura: todo cambio pasa por estas funciones, que validan rol, sesión y precios.
+
+| Función | Quién | Qué hace |
+|---|---|---|
+| `join_table(qr_token, guest_count?)` | Cliente | Abre la sesión o se une a la abierta. Error `invalid_qr` si el token no existe o la mesa está inactiva |
+| `open_table(table_id, guest_count?)` | Garzón | Abre o retoma la sesión de una mesa |
+| `place_order(session_id, items)` | Cliente de la mesa o garzón | Crea la ronda con precios de la carta. Error `dish_unavailable` si un plato está agotado |
+| `set_item_status(item_id, status)` | Cocina, garzón o cliente (solo cancelar) | Avanza el estado; un trigger impide saltos y registra el evento |
+| `call_waiter(session_id, type)` | Cliente de la mesa | Llamado `call` o `bill`; no duplica uno pendiente |
+| `attend_call(call_id)` | Garzón | Marca el llamado como atendido |
+| `close_session(session_id)` | Garzón | Cierra la mesa y atiende los llamados pendientes |

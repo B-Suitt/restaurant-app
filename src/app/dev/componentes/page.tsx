@@ -111,6 +111,7 @@ export default function ComponentsPage() {
           <Chip tone="success">Activo</Chip>
           <Chip tone="neutral">Inactivo</Chip>
           <Chip tone="neutral">Agotado</Chip>
+          <Chip tone="accent">Pidiendo la cuenta</Chip>
         </div>
       </Section>
 
