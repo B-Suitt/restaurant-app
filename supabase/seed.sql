@@ -57,7 +57,7 @@ insert into public.categories (id, name, description, sort_order) values
 insert into public.dishes (id, category_id, name, description, price, available, featured, sort_order) values
   ('00000000-0000-0000-0000-0000000d0001', '00000000-0000-0000-0000-0000000c0001', 'Papas rústicas', 'Crujientes, con alioli de la casa.', 4500, true, true, 1),
   ('00000000-0000-0000-0000-0000000d0002', '00000000-0000-0000-0000-0000000c0001', 'Empanaditas de queso', 'Seis unidades, con pebre.', 5900, true, false, 2),
-  ('00000000-0000-0000-0000-0000000d0003', '00000000-0000-0000-0000-0000000c0002', 'Smash burger', 'Doble carne, cheddar y pepinillos.', 9900, true, true, 1),
+  ('00000000-0000-0000-0000-0000000d0003', '00000000-0000-0000-0000-0000000c0002', 'Smash burger', 'Doble carne a la plancha, cheddar fundido, pepinillos y salsa de la casa en pan brioche.', 9900, true, true, 1),
   ('00000000-0000-0000-0000-0000000d0004', '00000000-0000-0000-0000-0000000c0002', 'Lomo a lo pobre', 'Con papas fritas, cebolla y huevo.', 12900, true, false, 2),
   ('00000000-0000-0000-0000-0000000d0005', '00000000-0000-0000-0000-0000000c0002', 'Ensalada César', 'Pollo grillado, crutones y parmesano.', 8900, true, false, 3),
   ('00000000-0000-0000-0000-0000000d0006', '00000000-0000-0000-0000-0000000c0003', 'Limonada de la casa', 'Limón fresco, menta y hielo.', 3500, true, true, 1),
@@ -68,8 +68,18 @@ insert into public.dishes (id, category_id, name, description, price, available,
 
 insert into public.dish_extras (dish_id, name, price) values
   ('00000000-0000-0000-0000-0000000d0003', 'Extra cheddar', 1000),
-  ('00000000-0000-0000-0000-0000000d0003', 'Tocino', 1500),
-  ('00000000-0000-0000-0000-0000000d0003', 'Huevo frito', 800),
+  ('00000000-0000-0000-0000-0000000d0003', 'Tocino crujiente', 1500),
+  ('00000000-0000-0000-0000-0000000d0003', 'Palta', 1500),
   ('00000000-0000-0000-0000-0000000d0001', 'Salsa cheddar', 1200),
   ('00000000-0000-0000-0000-0000000d0005', 'Doble pollo', 2500),
   ('00000000-0000-0000-0000-0000000d0006', 'Con jengibre', 0);
+
+-- Fotos de demo (recortadas del Figma, en public/demo). En producción se suben a Storage.
+update public.dishes set photo_url = '/demo/' || v.file
+from (values
+  ('00000000-0000-0000-0000-0000000d0001'::uuid, 'papas-rusticas.jpg'),
+  ('00000000-0000-0000-0000-0000000d0003'::uuid, 'smash-burger.jpg'),
+  ('00000000-0000-0000-0000-0000000d0006'::uuid, 'limonada.jpg'),
+  ('00000000-0000-0000-0000-0000000d0009'::uuid, 'brownie.jpg')
+) as v (id, file)
+where dishes.id = v.id;

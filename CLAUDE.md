@@ -15,6 +15,9 @@ MVP desarrollado por un equipo de 2 personas. Todo es web (no hay app nativa).
   `get_design_context` para su estructura y estilos, y `get_screenshot` para compararla.
 - El código que entrega Figma es una referencia: adaptarlo a los componentes y tokens del
   proyecto, nunca pegarlo tal cual.
+- Si el MCP de Figma no está disponible (límite del plan), usar los exportes en `docs/figma/`
+  (una imagen por rol, a 2x). Las posiciones de cada frame dentro de la sección están en el
+  `get_metadata` de la página.
 - Los diseños no tienen variables de Figma: extraer colores, tipografías, radios y
   espaciados de los frames y centralizarlos en `tailwind.config` / variables CSS.
 - Paleta: rojo (color principal y acciones), negro y blanco; grises neutros para fondos y bordes.
@@ -68,6 +71,8 @@ Seguir el mismo estilo visual para:
 - Regenerar tipos tras cambiar el esquema: `npm run db:types`
 - Usuarios de prueba (contraseña `restaurante123`): `admin@`, `garzon@`, `cocina@restaurante.cl`.
   QR de prueba: `/m/mesa-01` … `/m/mesa-08`.
+- Si en desarrollo faltan estilos de Tailwind (clases que no se aplican), detener `npm run dev`,
+  borrar la carpeta `.next` y volver a iniciarlo: la caché de Turbopack puede quedar desactualizada.
 
 ## Rutas
 

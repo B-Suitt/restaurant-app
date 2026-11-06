@@ -16,6 +16,10 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 | 2026-11-06 | Escrituras operativas solo por funciones RPC | Precios, roles y transiciones se validan en la base de datos, no en el frontend |
 | 2026-11-06 | Sin garzón asignado por mesa en el MVP | Los llamados llegan a todos los garzones; se registra quién atendió |
 | 2026-11-06 | Supabase local con Docker para desarrollo | Gratis, se resetea con un comando y los tests no tocan datos reales |
+| 2026-11-06 | Vistas de cada rol como componentes cliente; `proxy.ts` solo redirige por rol | Dependen de la sesión del navegador y de Realtime; la seguridad sigue en RLS |
+| 2026-11-06 | Vista del cliente con `instant = false` | Necesita la sesión anónima y la mesa antes de mostrar algo; dentro, la navegación es instantánea |
+| 2026-11-06 | Un solo `/login` para todo el personal | Móvil con el diseño de "Garzón · Acceso"; pantalla ancha con el diseño dividido de "Cocina · Acceso" |
+| 2026-11-06 | Carrito guardado en el navegador por sesión de mesa | Sobrevive a recargas; cada celular arma su propio carrito |
 
 ## Notas de implementación
 
@@ -31,6 +35,10 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 ### Auth
 - El registro por correo queda habilitado en Supabase porque el inicio anónimo lo
   necesita. No es un riesgo: una cuenta sin fila en `profiles` no tiene permisos de personal.
+
+- `useLiveData` (`src/lib/use-live-data.ts`) aplica estas reglas: se suscribe, carga al quedar
+  `SUBSCRIBED`, recarga ante cualquier cambio y al reconectar, y expone `live` para el aviso
+  "Sin conexión · reconectando…".
 
 ### Particularidades de la web
 - Los navegadores bloquean el sonido hasta la primera interacción: botón "Comenzar turno"
