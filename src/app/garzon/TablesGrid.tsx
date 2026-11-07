@@ -65,7 +65,7 @@ export function TablesGrid() {
     <>
       <AppHeader
         title={name ? `Hola, ${name.split(" ")[0]}` : "Mesas"}
-        subtitle={`Turno en curso · ${formatClock(new Date(now))}`}
+        subtitle={now ? `Turno en curso · ${formatClock(new Date(now))}` : "Turno en curso"}
         action={
           <SignOutButton>
             <HeaderIcon>

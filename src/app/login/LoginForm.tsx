@@ -7,7 +7,7 @@ import { Field, Input } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 import { ROLE_HOME, requiredRole, type StaffRole } from "@/lib/roles";
 
-export function LoginForm() {
+export function LoginForm({ footnote }: { footnote: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +79,7 @@ export function LoginForm() {
         Iniciar sesión
       </Button>
       <p className="text-center text-sm text-muted">Acceso exclusivo para el equipo del restaurante.</p>
-      <p className="text-center text-sm text-muted">¿Necesitas acceso? Habla con tu administrador.</p>
+      <p className="text-center text-sm text-muted">{footnote}</p>
     </form>
   );
 }
