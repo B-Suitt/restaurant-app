@@ -47,6 +47,10 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
   "sugerir junto a este plato", nombre visible y descripción interna de la mesa, y apellido
   del usuario (`profiles.name` guarda el nombre completo). "Destacar en la carta" usa `dishes.featured`.
 - Códigos QR generados en el navegador con la librería `qrcode`.
+- Pendiente: al cambiar la foto de un plato, la anterior queda en Storage. Borrarla requiere una
+  política SELECT para admin en `storage.objects` (migración).
+- Pendiente: un adicional que ya se pidió no se puede eliminar (FK de `order_item_extras`). Para
+  retirarlo de la carta haría falta una columna `dish_extras.active` (migración).
 
 ### Particularidades de la web
 - Los navegadores bloquean el sonido hasta la primera interacción: botón "Comenzar turno"
