@@ -19,7 +19,7 @@ export function AdminTopBar({ crumbs, live }: { crumbs: Crumb[]; live?: boolean 
     .join("");
 
   return (
-    <header className="sticky top-0 z-10 flex h-19 shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-9">
+    <header className="sticky top-0 z-10 flex h-19 shrink-0 items-center justify-between gap-4 print:hidden border-b border-border bg-surface px-9">
       <nav aria-label="Ruta" className="flex items-center gap-2 text-base text-muted">
         {[{ label: RESTAURANT_NAME, href: "/admin" }, ...crumbs].map((crumb, i, all) => (
           <Fragment key={i}>

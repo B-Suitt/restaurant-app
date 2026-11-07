@@ -19,7 +19,7 @@ Tomadas para poder avanzar; se pueden cambiar.
 | 11 | El garzón puede ingresar pedidos en nombre del cliente. |
 | 12 | Un usuario desactivado no puede iniciar sesión, pero su historial se conserva. |
 | 13 | Cerrar una mesa con platos sin entregar no se bloquea: el modal avisa cuántos quedan. Al cerrar, los llamados pendientes quedan atendidos. |
-| 14 | Una mesa con historial no se elimina: se desactiva. Nunca se modifica una mesa con una estadía abierta. |
+| 14 | Una mesa con historial no se elimina: se desactiva. Una mesa con una estadía abierta no se elimina ni se desactiva (sí se puede editar su número, zona o capacidad). |
 | 15 | El historial de pedidos incluye los de mesas abiertas y cerradas. |
 
 ## Preguntas abiertas

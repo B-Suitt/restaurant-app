@@ -24,7 +24,7 @@ export function AdminSidebar() {
   const name = useProfileName();
 
   return (
-    <aside className="sticky top-0 flex h-dvh w-58 shrink-0 flex-col gap-6 border-r border-border bg-surface px-4.5 py-7">
+    <aside className="sticky top-0 flex h-dvh w-58 print:hidden shrink-0 flex-col gap-6 border-r border-border bg-surface px-4.5 py-7">
       <BrandMark />
       <nav className="flex flex-col gap-2" aria-label="Administración">
         <p className="px-0 pb-1 text-2xs uppercase text-muted">Administración</p>
