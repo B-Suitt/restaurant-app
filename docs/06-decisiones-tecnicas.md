@@ -40,6 +40,14 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
   `SUBSCRIBED`, recarga ante cualquier cambio y al reconectar, y expone `live` para el aviso
   "Sin conexión · reconectando…".
 
+### Panel de administrador
+- Crear usuarios requiere la API de administración de Supabase: se usa `SUPABASE_SECRET_KEY`
+  solo en el servidor (Server Actions), nunca con prefijo `NEXT_PUBLIC_`.
+- Campos del Figma que no están en el esquema y quedan fuera del MVP: alérgenos del plato,
+  "sugerir junto a este plato", nombre visible y descripción interna de la mesa, y apellido
+  del usuario (`profiles.name` guarda el nombre completo). "Destacar en la carta" usa `dishes.featured`.
+- Códigos QR generados en el navegador con la librería `qrcode`.
+
 ### Particularidades de la web
 - Los navegadores bloquean el sonido hasta la primera interacción: botón "Comenzar turno"
   en garzón y cocina para activar las alertas.
