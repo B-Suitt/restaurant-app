@@ -7,9 +7,11 @@ import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { DishPhoto } from "@/components/ui/DishPhoto";
+import { FilterTabs } from "@/components/ui/FilterTabs";
 import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
 import { ClientNav } from "../ClientNav";
+import { WaiterCallActions } from "../WaiterCallActions";
 import { linePrice, tableLabel, useClientSession, type MenuDish } from "../ClientSessionProvider";
 
 // Frame "Cliente · Menú"
@@ -34,23 +36,12 @@ export function MenuView() {
         }
       />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
-        <div className="flex flex-wrap gap-1.75" role="tablist" aria-label="Categorías">
-          {[{ id: null, name: "Todo" }, ...categories].map((c) => (
-            <button
-              key={c.id ?? "all"}
-              type="button"
-              role="tab"
-              aria-selected={categoryId === c.id}
-              onClick={() => setCategoryId(c.id)}
-              className={cn(
-                "cursor-pointer rounded-full px-3.25 py-2.5 text-sm font-semibold transition-colors",
-                categoryId === c.id ? "bg-ink text-white" : "bg-surface-muted text-muted hover:text-ink",
-              )}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
+        <FilterTabs
+          label="Categorías"
+          value={categoryId}
+          onChange={setCategoryId}
+          options={[{ value: null, label: "Todo" }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+        />
 
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-[21px] leading-[1.4]">{category?.name ?? "Hecho para disfrutar"}</h2>
@@ -74,6 +65,7 @@ export function MenuView() {
             Ver carrito · {cartCount} {cartCount === 1 ? "producto" : "productos"} · {formatPrice(cartTotal)}
           </Link>
         )}
+        <WaiterCallActions />
         <p className="text-center text-xs text-muted">El pago se realiza directamente en el restaurante.</p>
       </main>
       <ClientNav active="menu" />

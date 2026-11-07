@@ -13,6 +13,7 @@ import { formatPrice } from "@/lib/format-price";
 import { errorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { ClientNav } from "../ClientNav";
+import { WaiterCallActions } from "../WaiterCallActions";
 import { linePrice, tableLabel, useClientSession, type CartLine, type MenuDish } from "../ClientSessionProvider";
 
 // Frame "Cliente · Carrito"
@@ -114,6 +115,8 @@ export function CartView() {
             Tu garzón también recibirá el pedido. El pago se realiza fuera de la app.
           </InfoNote>
         )}
+        <WaiterCallActions />
+        <p className="text-center text-xs text-muted">El pago se realiza directamente en el restaurante.</p>
       </main>
       <ClientNav active="menu" />
     </>

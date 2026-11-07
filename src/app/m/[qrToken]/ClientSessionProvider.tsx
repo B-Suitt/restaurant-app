@@ -3,21 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/rpc-errors";
+import { loadMenu, type MenuCategory, type MenuDish } from "@/lib/menu";
+export type { MenuCategory, MenuDish, MenuExtra } from "@/lib/menu";
 export { tableLabel } from "@/lib/order-format";
 import { InvalidQrScreen, LoadingScreen } from "./ClientScreens";
 
-export type MenuExtra = { id: string; name: string; price: number };
-export type MenuDish = {
-  id: string;
-  category_id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  photo_url: string | null;
-  available: boolean;
-  dish_extras: MenuExtra[];
-};
-export type MenuCategory = { id: string; name: string; description: string | null };
 export type CartLine = { key: string; dishId: string; quantity: number; note: string; extraIds: string[] };
 
 type SessionData = {
@@ -55,26 +45,6 @@ export function linePrice(line: CartLine, dish: MenuDish | undefined) {
   if (!dish) return 0;
   const extras = dish.dish_extras.filter((e) => line.extraIds.includes(e.id)).reduce((sum, e) => sum + e.price, 0);
   return (dish.price + extras) * line.quantity;
-}
-
-async function loadMenu() {
-  const supabase = createClient();
-  const [categories, dishes] = await Promise.all([
-    supabase.from("categories").select("id, name, description, sort_order").order("sort_order"),
-    supabase
-      .from("dishes")
-      .select("id, category_id, name, description, price, photo_url, available, sort_order, dish_extras(id, name, price)")
-      .order("sort_order"),
-  ]);
-  if (categories.error || dishes.error) throw categories.error ?? dishes.error;
-  const order = new Map(categories.data.map((c, i) => [c.id, i]));
-  return {
-    categories: categories.data,
-    // Solo platos de categorías visibles, ordenados por categoría y luego por plato.
-    dishes: dishes.data
-      .filter((d) => order.has(d.category_id))
-      .sort((a, b) => order.get(a.category_id)! - order.get(b.category_id)! || a.sort_order - b.sort_order),
-  };
 }
 
 // Una sola entrada por QR aunque React monte el efecto dos veces en desarrollo.

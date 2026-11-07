@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Check, UserRound } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
@@ -11,7 +11,6 @@ import { InfoNote } from "@/components/ui/InfoNote";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { extrasText, statusTime, tableLabel } from "@/lib/order-format";
 import { errorMessage } from "@/lib/rpc-errors";
-import { playChime } from "@/lib/shift-alerts";
 import { createClient } from "@/lib/supabase/client";
 import { formatAgo, formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
@@ -43,15 +42,6 @@ type ReadyItem = Awaited<ReturnType<typeof loadReady>>[number];
 export function ReadyDishes() {
   const now = useNow(30_000);
   const { data: items, live, reload } = useLiveData("waiter-ready", ["order_items"], loadReady);
-
-  // Suena cuando aparece un plato listo que no estaba en la carga anterior.
-  const known = useRef<Set<string> | null>(null);
-  useEffect(() => {
-    if (!items) return;
-    const hasNew = known.current !== null && items.some((i) => !known.current!.has(i.id));
-    known.current = new Set(items.map((i) => i.id));
-    if (hasNew) playChime();
-  }, [items]);
 
   const count = items?.length ?? 0;
 

@@ -5,9 +5,9 @@ export function WaiterNav({ active }: { active: "mesas" | "despachos" | "avisos"
   return (
     <BottomNav
       items={[
-        { label: "Mesas", icon: LayoutGrid, active: active === "mesas" }, // fase 4
+        { label: "Mesas", icon: LayoutGrid, href: "/garzon", active: active === "mesas" },
         { label: "Despachos", icon: BellRing, href: "/garzon/despachos", active: active === "despachos" },
-        { label: "Avisos", icon: Inbox, active: active === "avisos" }, // fase 4
+        { label: "Avisos", icon: Inbox, href: "/garzon/avisos", active: active === "avisos" },
       ]}
     />
   );

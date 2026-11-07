@@ -12,32 +12,18 @@ import { formatPrice } from "@/lib/format-price";
 import { ORDER_ITEM_STATUSES, type OrderItemStatus } from "@/lib/order-status";
 import { errorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
+import { itemTotal, loadSessionOrders, type SessionOrder, type SessionOrderItem } from "@/lib/session-orders";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { ClientNav } from "../ClientNav";
+import { WaiterCallActions } from "../WaiterCallActions";
 import { tableLabel, useClientSession } from "../ClientSessionProvider";
-
-async function loadOrders(sessionId: string) {
-  const { data, error } = await createClient()
-    .from("orders")
-    .select(
-      "id, number, created_at, order_items(id, quantity, note, unit_price, status, dishes(name), order_item_extras(price, dish_extras(name)))",
-    )
-    .eq("session_id", sessionId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  // Orden estable dentro de cada pedido (la base devuelve primero las filas sin cambios).
-  for (const order of data) order.order_items.sort((a, b) => a.dishes.name.localeCompare(b.dishes.name, "es"));
-  return data;
-}
-
-type Order = Awaited<ReturnType<typeof loadOrders>>[number];
 
 // Frame "Cliente · Seguimiento"
 export function OrderTrackingView() {
   const { basePath, sessionId, tableNumber, guestCount } = useClientSession();
   const { data: orders, live, reload } = useLiveData(`client-${sessionId}`, ["orders", "order_items"], () =>
-    loadOrders(sessionId),
+    loadSessionOrders(sessionId),
   );
 
   return (
@@ -80,6 +66,7 @@ export function OrderTrackingView() {
         <Link href={`${basePath}/menu`} className={buttonClasses({ variant: "secondary" })}>
           Agregar algo más
         </Link>
+        <WaiterCallActions />
         <p className="text-center text-xs text-muted">El pago se realiza directamente en el restaurante.</p>
       </main>
       <ClientNav active="pedido" />
@@ -87,13 +74,10 @@ export function OrderTrackingView() {
   );
 }
 
-function OrderCard({ order, tableNumber, onChange }: { order: Order; tableNumber: number; onChange: () => void }) {
+function OrderCard({ order, tableNumber, onChange }: { order: SessionOrder; tableNumber: number; onChange: () => void }) {
   const active = order.order_items.filter((i) => i.status !== "cancelado");
   const count = active.reduce((sum, i) => sum + i.quantity, 0);
-  const total = active.reduce(
-    (sum, i) => sum + (i.unit_price + i.order_item_extras.reduce((s, e) => s + e.price, 0)) * i.quantity,
-    0,
-  );
+  const total = active.reduce((sum, i) => sum + itemTotal(i), 0);
 
   return (
     <Card className="flex flex-col gap-3">
@@ -114,7 +98,7 @@ function OrderCard({ order, tableNumber, onChange }: { order: Order; tableNumber
   );
 }
 
-function OrderItemRow({ item, onChange }: { item: Order["order_items"][number]; onChange: () => void }) {
+function OrderItemRow({ item, onChange }: { item: SessionOrderItem; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const details = [
