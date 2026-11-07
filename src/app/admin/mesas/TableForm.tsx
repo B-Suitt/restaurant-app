@@ -14,6 +14,7 @@ import { tableLabel } from "@/lib/order-format";
 import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { TABLE_STATUS_DISPLAY, tableStatus, type TableStatus } from "@/lib/table-status";
+import { FormSkeleton } from "@/components/ui/Skeleton";
 
 const CAPACITIES = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -106,7 +107,7 @@ export function TableForm({ tableId }: { tableId: string | null }) {
             </Link>
           </Card>
         ) : !loaded ? (
-          <p className="py-10 text-center text-base text-muted">Cargando mesa…</p>
+          <FormSkeleton label="Cargando mesa…" />
         ) : (
           <div className="grid grid-cols-[1fr_390px] items-start gap-6">
             <form onSubmit={save} className="flex flex-col gap-6" noValidate>

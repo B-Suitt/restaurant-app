@@ -18,6 +18,8 @@ import { TABLE_STATUS_DISPLAY, tableStatus } from "@/lib/table-status";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { StatsSkeleton, TableSkeleton } from "@/components/ui/Skeleton";
 
 const FEED_SIZE = 5;
 
@@ -166,7 +168,10 @@ export function AdminDashboard() {
         />
 
         {!s ? (
-          <p className="py-10 text-center text-base text-muted">Cargando servicio…</p>
+          <div className="flex flex-col gap-6">
+            <StatsSkeleton />
+            <TableSkeleton rows={3} cols={4} label="Cargando servicio…" />
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -226,7 +231,9 @@ export function AdminDashboard() {
                     </p>
                   </div>
                   {s.attention.length === 0 ? (
-                    <Card className="py-8 text-center text-base text-muted">No hay mesas ocupadas en este momento.</Card>
+                    <EmptyState icon={<Armchair aria-hidden />} title="Sin mesas ocupadas">
+                      Cuando un cliente escanee el QR de su mesa, aparecerá aquí.
+                    </EmptyState>
                   ) : (
                     <Table>
                       <TableHead>

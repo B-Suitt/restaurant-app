@@ -18,6 +18,9 @@ import { tableLabel } from "@/lib/order-format";
 import { errorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { WaiterNav } from "../../../WaiterNav";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { DishListSkeleton } from "@/components/ui/Skeleton";
+import { SearchX } from "lucide-react";
 
 /** Texto sin mayúsculas ni tildes, para buscar "limon" y encontrar "Limón". */
 const normalize = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -103,7 +106,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
             {loadError}
           </p>
         ) : !menu ? (
-          <p className="py-6 text-center text-base text-muted">Cargando carta…</p>
+          <DishListSkeleton />
         ) : (
           <>
             <Field label="Buscar en la carta">
@@ -123,7 +126,9 @@ export function AddOrder({ tableId }: { tableId: string }) {
             <h2 className="text-[21px] leading-[1.4]">¿Qué desea la mesa?</h2>
 
             {visible.length === 0 ? (
-              <p className="py-6 text-center text-base text-muted">No encontramos platos con esa búsqueda.</p>
+              <EmptyState icon={<SearchX aria-hidden />} title="Sin resultados">
+                No encontramos platos con esa búsqueda.
+              </EmptyState>
             ) : (
               <ul className="flex flex-col gap-3.5">
                 {visible.map((dish) => (

@@ -25,6 +25,9 @@ import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
 import { useProfileName } from "@/lib/use-profile";
 import { WaiterNav } from "../../WaiterNav";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardsSkeleton } from "@/components/ui/Skeleton";
+import { ClipboardList, WifiOff } from "lucide-react";
 
 async function loadTable(tableId: string) {
   const supabase = createClient();
@@ -89,7 +92,13 @@ export function TableDetail({ tableId }: { tableId: string }) {
       />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         {data === null ? (
-          <p className="py-6 text-center text-base text-muted">{loadError ? "No pudimos cargar la mesa." : "Cargando mesa…"}</p>
+          loadError ? (
+            <EmptyState icon={<WifiOff aria-hidden />} title="No pudimos cargar la mesa">
+              Revisa tu conexión. Reintentaremos automáticamente.
+            </EmptyState>
+          ) : (
+            <CardsSkeleton count={2} label="Cargando mesa…" />
+          )
         ) : !table ? (
           <Card className="flex flex-col gap-2 text-center">
             <p className="text-lg font-bold">Mesa no encontrada</p>
@@ -139,10 +148,9 @@ export function TableDetail({ tableId }: { tableId: string }) {
                 ))}
 
                 {session.orders.length === 0 ? (
-                  <Card className="flex flex-col gap-2 text-center">
-                    <p className="text-lg font-bold">Aún no hay pedidos</p>
-                    <p className="text-sm text-muted">Los pedidos de la mesa aparecerán aquí.</p>
-                  </Card>
+                  <EmptyState icon={<ClipboardList aria-hidden />} title="Aún no hay pedidos">
+                    Los pedidos de la mesa aparecerán aquí. También puedes agregarlos tú.
+                  </EmptyState>
                 ) : (
                   session.orders.map((order) => (
                     <Card key={order.id} className="flex flex-col gap-3">

@@ -14,6 +14,7 @@ import { ROLE_LABEL, type StaffRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
 import { createUser, getUserDates, updateUser } from "./actions";
+import { FormSkeleton } from "@/components/ui/Skeleton";
 
 /** Lo que cada rol puede hacer (coincide con las políticas RLS y las funciones de la base). */
 const PERMISSIONS: Record<StaffRole, { can: string[]; cannot: string }> = {
@@ -111,7 +112,7 @@ export function UserForm({ userId }: { userId: string | null }) {
             </Link>
           </Card>
         ) : !loaded ? (
-          <p className="py-10 text-center text-base text-muted">Cargando usuario…</p>
+          <FormSkeleton label="Cargando usuario…" />
         ) : (
           <div className="grid grid-cols-[1fr_390px] items-start gap-6">
             <form onSubmit={save} noValidate className="flex flex-col gap-6">

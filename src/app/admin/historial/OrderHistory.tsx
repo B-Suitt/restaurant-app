@@ -5,7 +5,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { Pagination, paginate } from "@/components/ui/Pagination";
@@ -19,6 +18,9 @@ import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { History } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -64,7 +66,9 @@ export function OrderHistory() {
     return (
       <>
         <AdminTopBar crumbs={[{ label: "Historial de pedidos" }]} />
-        <p className="py-10 text-center text-base text-muted">Cargando pedidos…</p>
+        <div className="px-9 py-10">
+          <TableSkeleton cols={6} label="Cargando pedidos…" />
+        </div>
       </>
     );
   }
@@ -156,9 +160,11 @@ function HistoryView({ today }: { today: string }) {
         </div>
 
         {!orders ? (
-          <p className="py-10 text-center text-base text-muted">Cargando pedidos…</p>
+          <TableSkeleton cols={6} label="Cargando pedidos…" />
         ) : visible.length === 0 ? (
-          <Card className="py-10 text-center text-base text-muted">No hay pedidos con esos filtros.</Card>
+          <EmptyState icon={<History aria-hidden />} title="Sin pedidos">
+            No hay pedidos con esos filtros. Prueba con otro rango de fechas.
+          </EmptyState>
         ) : (
           <>
             <Table>

@@ -13,6 +13,8 @@ import { formatPrice } from "@/lib/format-price";
 import { ClientNav } from "../ClientNav";
 import { WaiterCallActions } from "../WaiterCallActions";
 import { linePrice, tableLabel, useClientSession, type MenuDish } from "../ClientSessionProvider";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { UtensilsCrossed } from "lucide-react";
 
 // Frame "Cliente · Menú"
 export function MenuView() {
@@ -51,7 +53,14 @@ export function MenuView() {
         </div>
 
         {visible.length === 0 ? (
-          <p className="py-10 text-center text-base text-muted">No hay platos en esta categoría por ahora.</p>
+          <EmptyState
+            icon={<UtensilsCrossed aria-hidden />}
+            title={dishes.length === 0 ? "La carta se está preparando" : "Sin platos en esta categoría"}
+          >
+            {dishes.length === 0
+              ? "Aún no hay platos disponibles. Pídele ayuda a un garzón."
+              : "Prueba con otra categoría o vuelve más tarde."}
+          </EmptyState>
         ) : (
           <ul className="flex flex-col gap-4">
             {visible.map((dish) => (

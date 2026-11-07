@@ -13,6 +13,7 @@ import { useLiveData } from "@/lib/use-live-data";
 import { ClientNav } from "../ClientNav";
 import { tableLabel, useClientSession } from "../ClientSessionProvider";
 import { WaiterCallActions } from "../WaiterCallActions";
+import { CardsSkeleton } from "@/components/ui/Skeleton";
 
 async function loadBill(sessionId: string) {
   const [orders, session] = await Promise.all([
@@ -51,7 +52,7 @@ export function BillView() {
         <p className="text-base text-muted">Todo lo consumido durante tu visita, en un solo lugar.</p>
 
         {data === null ? (
-          <p className="py-6 text-center text-base text-muted">Cargando cuenta…</p>
+          <CardsSkeleton count={1} label="Cargando cuenta…" />
         ) : (
           <Card className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3 border-b border-border pb-3">

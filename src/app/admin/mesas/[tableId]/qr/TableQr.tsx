@@ -13,6 +13,7 @@ import { InfoNote } from "@/components/ui/InfoNote";
 import { tableLabel } from "@/lib/order-format";
 import { RESTAURANT_NAME } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/client";
+import { FormSkeleton } from "@/components/ui/Skeleton";
 
 type Table = { number: number; zone: string; qr_token: string; active: boolean };
 type Format = "png" | "svg";
@@ -83,7 +84,7 @@ export function TableQr({ tableId }: { tableId: string }) {
             </Link>
           </Card>
         ) : !table ? (
-          <p className="py-10 text-center text-base text-muted">Cargando código…</p>
+          <FormSkeleton label="Cargando código…" />
         ) : (
           <div className="grid grid-cols-[1fr_488px] items-start gap-8 print:block">
             {/* Lo único que se imprime. */}

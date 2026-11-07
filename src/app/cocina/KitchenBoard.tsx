@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BellRing, LogOut, Timer } from "lucide-react";
+import { BellRing, ChefHat, LogOut, Timer } from "lucide-react";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
 import { ShiftStart } from "@/components/layout/ShiftStart";
 import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardsSkeleton } from "@/components/ui/Skeleton";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { cn } from "@/lib/cn";
 import { extrasText, statusTime, tableLabel } from "@/lib/order-format";
@@ -129,11 +131,18 @@ export function KitchenBoard() {
                     {count} {count === 1 ? "plato" : "platos"}
                   </p>
                 </div>
-                {items && columnItems.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-border p-6 text-center text-md text-muted">
-                    {status === "recibido" ? "Sin pedidos por ahora" : "Sin platos"}
-                  </p>
-                )}
+                {items === null && <CardsSkeleton count={2} label="Cargando pedidos…" />}
+                {items &&
+                  columnItems.length === 0 &&
+                  (status === "recibido" ? (
+                    <EmptyState icon={<ChefHat aria-hidden />} title="Sin pedidos por ahora">
+                      Los pedidos nuevos aparecerán aquí con un aviso sonoro.
+                    </EmptyState>
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-border p-6 text-center text-md text-muted">
+                      Sin platos
+                    </p>
+                  ))}
                 {columnItems.map((item) => (
                   <KitchenCard key={item.id} item={item} now={now} onChange={reload} />
                 ))}

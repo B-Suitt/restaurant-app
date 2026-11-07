@@ -20,6 +20,9 @@ import { formatAgo, formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
 import { WaiterNav } from "../WaiterNav";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardsSkeleton } from "@/components/ui/Skeleton";
+import { CheckCheck, Inbox } from "lucide-react";
 
 /** Ventana de avisos ya atendidos que se muestran (un turno). */
 const SHIFT_HOURS = 12;
@@ -135,16 +138,16 @@ export function AlertsInbox() {
         />
 
         {alerts === null ? (
-          <p className="py-6 text-center text-base text-muted">Cargando avisos…</p>
+          <CardsSkeleton label="Cargando avisos…" />
         ) : visible.length === 0 ? (
-          <Card className="flex flex-col gap-2 text-center">
-            <p className="text-lg font-bold">{filter === "atendidos" ? "Sin avisos atendidos" : "Todo al día"}</p>
-            <p className="text-sm text-muted">
-              {filter === "atendidos"
-                ? "Los llamados que atiendas durante el turno aparecerán aquí."
-                : "Te avisaremos cuando una mesa te llame, pida la cuenta o haya un plato listo."}
-            </p>
-          </Card>
+          <EmptyState
+            icon={filter === "atendidos" ? <Inbox aria-hidden /> : <CheckCheck aria-hidden />}
+            title={filter === "atendidos" ? "Sin avisos atendidos" : "Todo al día"}
+          >
+            {filter === "atendidos"
+              ? "Los llamados que atiendas durante el turno aparecerán aquí."
+              : "Te avisaremos cuando una mesa te llame, pida la cuenta o haya un plato listo."}
+          </EmptyState>
         ) : (
           visible.map((alert) => (
             <AlertCard key={`${alert.kind}-${alert.id}`} alert={alert} now={now} onChange={reload} />

@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { buttonClasses } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
@@ -15,6 +14,9 @@ import { ROLE_LABEL, type StaffRole } from "@/lib/roles";
 import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { setUserActive } from "./actions";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { SearchX } from "lucide-react";
 
 type Profile = { id: string; name: string; email: string; role: StaffRole; active: boolean };
 
@@ -116,9 +118,11 @@ export function UsersAdmin() {
         )}
 
         {!users ? (
-          <p className="py-10 text-center text-base text-muted">Cargando equipo…</p>
+          <TableSkeleton label="Cargando equipo…" />
         ) : visible.length === 0 ? (
-          <Card className="py-10 text-center text-base text-muted">No hay usuarios con esos filtros.</Card>
+          <EmptyState icon={<SearchX aria-hidden />} title="Sin resultados">
+            No hay usuarios con esos filtros.
+          </EmptyState>
         ) : (
           <Table>
             <TableHead>

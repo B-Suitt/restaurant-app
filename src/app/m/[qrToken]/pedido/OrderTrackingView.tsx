@@ -17,6 +17,9 @@ import { useLiveData } from "@/lib/use-live-data";
 import { ClientNav } from "../ClientNav";
 import { WaiterCallActions } from "../WaiterCallActions";
 import { tableLabel, useClientSession } from "../ClientSessionProvider";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardsSkeleton } from "@/components/ui/Skeleton";
+import { ReceiptText } from "lucide-react";
 
 // Frame "Cliente · Seguimiento"
 export function OrderTrackingView() {
@@ -43,12 +46,19 @@ export function OrderTrackingView() {
         <p className="text-base text-muted">Aquí verás el estado de cada plato de la mesa.</p>
 
         {orders === null ? (
-          <p className="py-6 text-center text-base text-muted">Cargando pedidos…</p>
+          <CardsSkeleton count={2} label="Cargando pedidos…" />
         ) : orders.length === 0 ? (
-          <Card className="flex flex-col gap-2 text-center">
-            <p className="text-lg font-bold">Aún no hay pedidos</p>
-            <p className="text-sm text-muted">Cuando envíes tu pedido, aquí verás cómo avanza cada plato.</p>
-          </Card>
+          <EmptyState
+            icon={<ReceiptText aria-hidden />}
+            title="Aún no hay pedidos"
+            action={
+              <Link href={`${basePath}/menu`} className={buttonClasses({ className: "px-6" })}>
+                Ver menú
+              </Link>
+            }
+          >
+            Cuando envíes tu pedido, aquí verás cómo avanza cada plato.
+          </EmptyState>
         ) : (
           orders.map((order) => <OrderCard key={order.id} order={order} tableNumber={tableNumber} onChange={reload} />)
         )}

@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Plus, Star } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { buttonClasses } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { DishPhoto } from "@/components/ui/DishPhoto";
 import { Field, Input, Select } from "@/components/ui/Field";
@@ -15,6 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatPrice } from "@/lib/format-price";
 import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { SearchX, UtensilsCrossed } from "lucide-react";
 
 /** Texto sin mayúsculas ni tildes, para buscar "limon" y encontrar "Limón". */
 const normalize = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -121,14 +123,14 @@ export function MenuAdmin() {
         )}
 
         {!data ? (
-          <p className="py-10 text-center text-base text-muted">Cargando carta…</p>
+          <TableSkeleton cols={6} label="Cargando carta…" />
         ) : visible.length === 0 ? (
-          <Card className="flex flex-col items-center gap-2 py-10 text-center">
-            <p className="text-lg font-bold">{data.dishes.length === 0 ? "La carta está vacía" : "Sin resultados"}</p>
-            <p className="text-sm text-muted">
-              {data.dishes.length === 0 ? "Crea el primer plato para que tus clientes puedan pedir." : "No hay platos con esos filtros."}
-            </p>
-          </Card>
+          <EmptyState
+            icon={data.dishes.length === 0 ? <UtensilsCrossed aria-hidden /> : <SearchX aria-hidden />}
+            title={data.dishes.length === 0 ? "La carta está vacía" : "Sin resultados"}
+          >
+            {data.dishes.length === 0 ? "Crea el primer plato para que tus clientes puedan pedir." : "No hay platos con esos filtros."}
+          </EmptyState>
         ) : (
           <Table>
             <TableHead>

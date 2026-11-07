@@ -15,6 +15,7 @@ import { ORDER_ITEM_STATUS_DISPLAY, type OrderItemStatus } from "@/lib/order-sta
 import { itemTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
+import { StatsSkeleton, TableSkeleton } from "@/components/ui/Skeleton";
 
 async function loadOrder(orderId: string) {
   const supabase = createClient();
@@ -130,7 +131,10 @@ export function OrderDetail({ orderId }: { orderId: string }) {
             </Link>
           </Card>
         ) : !data || !order ? (
-          <p className="py-10 text-center text-base text-muted">Cargando pedido…</p>
+          <div className="flex flex-col gap-6">
+            <StatsSkeleton count={3} />
+            <TableSkeleton rows={3} cols={4} label="Cargando pedido…" />
+          </div>
         ) : (
           <Detail data={data} />
         )}

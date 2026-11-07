@@ -5,7 +5,6 @@ import { useState } from "react";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Button, buttonClasses } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
@@ -18,6 +17,9 @@ import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { TABLE_STATUS_DISPLAY, tableStatus, type TableStatus } from "@/lib/table-status";
 import { useLiveData } from "@/lib/use-live-data";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { QrCode, SearchX } from "lucide-react";
 
 const PAGE_SIZE = 8;
 
@@ -116,11 +118,14 @@ export function TablesAdmin() {
         </div>
 
         {tables === null ? (
-          <p className="py-10 text-center text-base text-muted">Cargando mesas…</p>
+          <TableSkeleton label="Cargando mesas…" />
         ) : filtered.length === 0 ? (
-          <Card className="py-10 text-center text-base text-muted">
-            {tables.length === 0 ? "Aún no hay mesas. Agrega la primera." : "No hay mesas con esos filtros."}
-          </Card>
+          <EmptyState
+            icon={tables.length === 0 ? <QrCode aria-hidden /> : <SearchX aria-hidden />}
+            title={tables.length === 0 ? "Aún no hay mesas" : "Sin resultados"}
+          >
+            {tables.length === 0 ? "Agrega la primera mesa para generar su código QR." : "No hay mesas con esos filtros."}
+          </EmptyState>
         ) : (
           <>
             <Table>

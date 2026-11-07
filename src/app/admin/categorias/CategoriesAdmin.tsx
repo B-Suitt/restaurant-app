@@ -13,6 +13,9 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { cn } from "@/lib/cn";
 import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSkeleton } from "@/components/ui/Skeleton";
+import { Layers } from "lucide-react";
 
 type Category = { id: string; name: string; description: string | null; active: boolean; dishCount: number };
 
@@ -158,12 +161,14 @@ export function CategoriesAdmin() {
         />
 
         {!items ? (
-          <p className="py-10 text-center text-base text-muted">Cargando categorías…</p>
+          <TableSkeleton rows={4} cols={4} label="Cargando categorías…" />
         ) : (
           <div className="grid grid-cols-[1fr_400px] items-start gap-6">
             <div className="flex flex-col gap-6">
               {items.length === 0 ? (
-                <Card className="py-10 text-center text-base text-muted">Aún no hay categorías. Agrega la primera.</Card>
+                <EmptyState icon={<Layers aria-hidden />} title="Aún no hay categorías">
+                  Agrega la primera para empezar a armar la carta.
+                </EmptyState>
               ) : (
                 <Table>
                   <TableHead>

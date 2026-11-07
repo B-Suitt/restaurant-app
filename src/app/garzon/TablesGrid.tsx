@@ -18,6 +18,8 @@ import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
 import { useProfileName } from "@/lib/use-profile";
 import { WaiterNav } from "./WaiterNav";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TileGridSkeleton } from "@/components/ui/Skeleton";
 
 async function loadTables() {
   const supabase = createClient();
@@ -93,9 +95,11 @@ export function TablesGrid() {
         )}
 
         {tables === null ? (
-          <p className="py-6 text-center text-base text-muted">Cargando mesas…</p>
+          <TileGridSkeleton />
         ) : tables.length === 0 ? (
-          <p className="py-6 text-center text-base text-muted">No hay mesas activas.</p>
+          <EmptyState icon={<Armchair aria-hidden />} title="No hay mesas activas">
+            El administrador puede agregar o activar mesas desde su panel.
+          </EmptyState>
         ) : (
           <>
             <ul className="grid grid-cols-2 gap-2.5">

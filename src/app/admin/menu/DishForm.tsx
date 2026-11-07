@@ -12,6 +12,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { PriceInput } from "@/components/ui/PriceInput";
 import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
+import { FormSkeleton } from "@/components/ui/Skeleton";
 
 const BUCKET = "dish-photos";
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // igual que el límite del bucket
@@ -198,7 +199,7 @@ export function DishForm({ dishId }: { dishId: string | null }) {
             </Link>
           </Card>
         ) : !categories ? (
-          <p className="py-10 text-center text-base text-muted">Cargando plato…</p>
+          <FormSkeleton label="Cargando plato…" />
         ) : categories.length === 0 ? (
           <Card className="py-10 text-center text-base text-muted">
             Primero crea una categoría.{" "}

@@ -16,6 +16,9 @@ import { formatAgo, formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
 import { WaiterNav } from "../WaiterNav";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CardsSkeleton } from "@/components/ui/Skeleton";
+import { HandPlatter } from "lucide-react";
 
 async function loadReady() {
   const { data, error } = await createClient()
@@ -63,11 +66,11 @@ export function ReadyDishes() {
         <h2 className="text-[27px] leading-[1.4]">De cocina a la mesa.</h2>
         <p className="text-base text-muted">Confirma la entrega cuando el plato llegue al comensal.</p>
 
+        {items === null && <CardsSkeleton count={2} label="Cargando despachos…" />}
         {items && items.length === 0 && (
-          <Card className="flex flex-col gap-2 text-center">
-            <p className="text-lg font-bold">Nada por despachar</p>
-            <p className="text-sm text-muted">Te avisaremos cuando cocina marque un plato como listo.</p>
-          </Card>
+          <EmptyState icon={<HandPlatter aria-hidden />} title="Nada por despachar">
+            Te avisaremos cuando cocina marque un plato como listo.
+          </EmptyState>
         )}
         {items?.map((item) => <ReadyCard key={item.id} item={item} now={now} onChange={reload} />)}
 
