@@ -10,7 +10,6 @@ import { InfoNote } from "@/components/ui/InfoNote";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
-import { errorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { ClientNav } from "../ClientNav";
 import { WaiterCallActions } from "../WaiterCallActions";
@@ -19,7 +18,7 @@ import { linePrice, tableLabel, useClientSession, type CartLine, type MenuDish }
 // Frame "Cliente · Carrito"
 export function CartView() {
   const router = useRouter();
-  const { basePath, sessionId, tableNumber, cart, dishById, setQuantity, removeLine, clearCart, refreshMenu } =
+  const { basePath, sessionId, tableNumber, cart, dishById, setQuantity, removeLine, clearCart, refreshMenu, rpcError } =
     useClientSession();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,14 +35,14 @@ export function CartView() {
   async function sendOrder() {
     setSending(true);
     setError(null);
-    const { error: rpcError } = await createClient().rpc("place_order", {
+    const { error: placeError } = await createClient().rpc("place_order", {
       p_session_id: sessionId,
       p_items: cart.map((l) => ({ dish_id: l.dishId, quantity: l.quantity, note: l.note, extra_ids: l.extraIds })),
     });
-    if (rpcError) {
+    if (placeError) {
       setSending(false);
-      if (rpcError.message === "dish_unavailable") await refreshMenu().catch(() => {});
-      setError(errorMessage(rpcError));
+      if (placeError.message === "dish_unavailable") await refreshMenu().catch(() => {});
+      setError(rpcError(placeError));
       return;
     }
     clearCart();

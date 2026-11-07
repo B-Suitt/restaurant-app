@@ -8,7 +8,6 @@ import { Button, buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Modal } from "@/components/ui/Modal";
 import { formatPrice } from "@/lib/format-price";
-import { errorMessage } from "@/lib/rpc-errors";
 import { loadSessionOrders, sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
 import { tableLabel, useClientSession } from "./ClientSessionProvider";
@@ -21,7 +20,7 @@ type CallType = "call" | "bill";
  * `layout="bill-first"`: "Pedir la cuenta" destacado y "Llamar al garzón" debajo (cuenta).
  */
 export function WaiterCallActions({ layout = "pair" }: { layout?: "pair" | "bill-first" }) {
-  const { sessionId, tableNumber, basePath } = useClientSession();
+  const { sessionId, tableNumber, basePath, rpcError } = useClientSession();
   const pathname = usePathname();
   const [busy, setBusy] = useState<CallType | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +38,7 @@ export function WaiterCallActions({ layout = "pair" }: { layout?: "pair" | "bill
     ]);
     setBusy(null);
     if (call.error) {
-      setError(errorMessage(call.error));
+      setError(rpcError(call.error));
       return;
     }
     setTotal(orders ? sessionTotal(orders) : null);

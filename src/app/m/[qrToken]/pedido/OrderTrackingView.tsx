@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/Card";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { formatPrice } from "@/lib/format-price";
 import { ORDER_ITEM_STATUSES, type OrderItemStatus } from "@/lib/order-status";
-import { errorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { itemTotal, loadSessionOrders, type SessionOrder, type SessionOrderItem } from "@/lib/session-orders";
 import { formatClock } from "@/lib/time-format";
@@ -99,6 +98,7 @@ function OrderCard({ order, tableNumber, onChange }: { order: SessionOrder; tabl
 }
 
 function OrderItemRow({ item, onChange }: { item: SessionOrderItem; onChange: () => void }) {
+  const { rpcError } = useClientSession();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const details = [
@@ -109,9 +109,9 @@ function OrderItemRow({ item, onChange }: { item: SessionOrderItem; onChange: ()
   async function cancel() {
     if (!window.confirm(`¿Cancelar ${item.dishes.name}?`)) return;
     setBusy(true);
-    const { error: rpcError } = await createClient().rpc("set_item_status", { p_item_id: item.id, p_status: "cancelado" });
+    const { error: cancelError } = await createClient().rpc("set_item_status", { p_item_id: item.id, p_status: "cancelado" });
     setBusy(false);
-    setError(rpcError ? errorMessage(rpcError) : null);
+    setError(cancelError ? rpcError(cancelError) : null);
     onChange();
   }
 

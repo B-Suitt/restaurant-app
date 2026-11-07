@@ -6,7 +6,7 @@ import { errorMessage } from "@/lib/rpc-errors";
 import { loadMenu, type MenuCategory, type MenuDish } from "@/lib/menu";
 export type { MenuCategory, MenuDish, MenuExtra } from "@/lib/menu";
 export { tableLabel } from "@/lib/order-format";
-import { InvalidQrScreen, LoadingScreen } from "./ClientScreens";
+import { InvalidQrScreen, LoadingScreen, TableClosedScreen } from "./ClientScreens";
 
 export type CartLine = { key: string; dishId: string; quantity: number; note: string; extraIds: string[] };
 
@@ -30,6 +30,11 @@ type ClientSession = SessionData & {
   clearCart: () => void;
   /** Vuelve a leer la carta (p. ej. para detectar platos agotados antes de enviar). */
   refreshMenu: () => Promise<void>;
+  /**
+   * Mensaje para un error de RPC. Si sugiere que la mesa se cerró (forbidden / session_not_open),
+   * lo comprueba y, de ser así, muestra la pantalla de mesa cerrada.
+   */
+  rpcError: (error: { message?: string }) => string;
 };
 
 const Context = createContext<ClientSession | null>(null);
@@ -84,10 +89,20 @@ function joinTable(qrToken: string) {
 
 const cartKey = (sessionId: string) => `cart:${sessionId}`;
 
+/** Cada cuánto se comprueba que la mesa siga abierta (Realtime no avisa: al cerrarse, RLS deja de mostrarla). */
+const SESSION_CHECK_MS = 30_000;
+
+/** La sesión sigue abierta si el cliente todavía puede leerla (RLS solo muestra sesiones abiertas). */
+async function isSessionOpen(sessionId: string) {
+  const { data, error } = await createClient().from("table_sessions").select("id").eq("id", sessionId);
+  return error ? true : data.length > 0; // ante un error de red, no asumir que se cerró
+}
+
 export function ClientSessionProvider({ qrToken, children }: { qrToken: string; children: ReactNode }) {
   const [data, setData] = useState<SessionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [closed, setClosed] = useState(false);
 
   useEffect(() => {
     joinTable(qrToken)
@@ -130,6 +145,38 @@ export function ClientSessionProvider({ qrToken, children }: { qrToken: string; 
   const removeLine = useCallback((key: string) => setCart((current) => current.filter((l) => l.key !== key)), []);
   const clearCart = useCallback(() => setCart([]), []);
 
+  // Detecta el cierre de la mesa: cada cierto tiempo y al volver a la pestaña.
+  const checkSession = useCallback(async () => {
+    if (!sessionId) return;
+    if (await isSessionOpen(sessionId)) return;
+    setClosed(true);
+    try {
+      localStorage.removeItem(cartKey(sessionId));
+    } catch {
+      // Sin almacenamiento: nada que limpiar.
+    }
+  }, [sessionId]);
+  useEffect(() => {
+    if (!sessionId || closed) return;
+    const id = setInterval(checkSession, SESSION_CHECK_MS);
+    const onVisible = () => document.visibilityState === "visible" && checkSession();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", checkSession);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", checkSession);
+    };
+  }, [sessionId, closed, checkSession]);
+
+  const rpcError = useCallback(
+    (error: { message?: string }) => {
+      if (error.message === "forbidden" || error.message === "session_not_open") checkSession();
+      return errorMessage(error);
+    },
+    [checkSession],
+  );
+
   const refreshMenu = useCallback(async () => {
     const menu = await loadMenu();
     setData((current) => (current ? { ...current, ...menu } : current));
@@ -148,10 +195,12 @@ export function ClientSessionProvider({ qrToken, children }: { qrToken: string; 
       removeLine,
       clearCart,
       refreshMenu,
+      rpcError,
     };
-  }, [data, qrToken, cart, addToCart, setQuantity, removeLine, clearCart, refreshMenu]);
+  }, [data, qrToken, cart, addToCart, setQuantity, removeLine, clearCart, refreshMenu, rpcError]);
 
   if (error) return <InvalidQrScreen message={errorMessage({ message: error })} />;
+  if (closed && data) return <TableClosedScreen tableNumber={data.tableNumber} />;
   if (!value) return <LoadingScreen />;
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
