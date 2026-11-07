@@ -5,6 +5,8 @@ import { Fragment, type ReactNode } from "react";
 import { Bell } from "lucide-react";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
 import { RESTAURANT_NAME } from "@/lib/restaurant";
+import { createClient } from "@/lib/supabase/client";
+import { useLiveData } from "@/lib/use-live-data";
 import { useProfileName } from "@/lib/use-profile";
 
 type Crumb = { label: string; href?: string };
@@ -36,7 +38,7 @@ export function AdminTopBar({ crumbs, live }: { crumbs: Crumb[]; live?: boolean 
       </nav>
       <div className="flex items-center gap-5">
         {live !== undefined && <LiveIndicator live={live} />}
-        <Bell className="size-5 text-ink" aria-hidden />
+        <PendingBell />
         <span
           className="flex size-8 items-center justify-center rounded-full bg-ink text-xs text-white"
           aria-label={name ?? undefined}
@@ -58,5 +60,34 @@ export function AdminPageTitle({ title, subtitle, action }: { title: string; sub
       </div>
       {action}
     </div>
+  );
+}
+
+/** Mesas que llaman o piden la cuenta ahora (llamados sin atender de sesiones abiertas). */
+async function loadPendingTables() {
+  const { data, error } = await createClient()
+    .from("waiter_calls")
+    .select("session_id, table_sessions!inner(status)")
+    .is("attended_at", null)
+    .eq("table_sessions.status", "open");
+  if (error) throw error;
+  return new Set(data.map((c) => c.session_id)).size;
+}
+
+/** Campana con el número de mesas que esperan atención; lleva al panel general. */
+function PendingBell() {
+  const { data: count } = useLiveData("admin-bell", ["waiter_calls", "table_sessions"], loadPendingTables);
+  const label = count
+    ? `${count} ${count === 1 ? "mesa espera" : "mesas esperan"} atención`
+    : "Sin solicitudes pendientes";
+  return (
+    <Link href="/admin" aria-label={label} title={label} className="relative text-ink hover:text-primary">
+      <Bell className="size-5" aria-hidden />
+      {!!count && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-2xs leading-none text-white tabular-nums">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </Link>
   );
 }

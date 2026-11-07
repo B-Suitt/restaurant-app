@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { ImagePlus, Plus, X } from "lucide-react";
+import { ImagePlus, Plus, Trash2, X } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -13,6 +13,7 @@ import { PriceInput } from "@/components/ui/PriceInput";
 import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { FormSkeleton } from "@/components/ui/Skeleton";
+import { Modal } from "@/components/ui/Modal";
 
 const BUCKET = "dish-photos";
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // igual que el límite del bucket
@@ -48,11 +49,15 @@ export function DishForm({ dishId }: { dishId: string | null }) {
   const [originalExtraIds, setOriginalExtraIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Un plato que ya se pidió no se puede eliminar (lo referencia el historial): solo marcarlo agotado.
+  const [ordered, setOrdered] = useState<boolean | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     (async () => {
-      const [cats, dish] = await Promise.all([
+      const [cats, dish, orderedItems] = await Promise.all([
         supabase.from("categories").select("id, name").order("sort_order"),
         dishId
           ? supabase
@@ -61,7 +66,9 @@ export function DishForm({ dishId }: { dishId: string | null }) {
               .eq("id", dishId)
               .maybeSingle()
           : null,
+        dishId ? supabase.from("order_items").select("id", { count: "exact", head: true }).eq("dish_id", dishId) : null,
       ]);
+      setOrdered(orderedItems ? (orderedItems.count ?? 1) > 0 : null);
       if (dish) {
         if (!dish.data) return setNotFound(true);
         const d = dish.data;
@@ -172,6 +179,24 @@ export function DishForm({ dishId }: { dishId: string | null }) {
       setOriginalExtraIds((all) => all.filter((x) => x !== extraId));
     }
 
+    router.push("/admin/menu");
+  }
+
+  async function removeDish() {
+    if (!dishId) return;
+    setDeleting(true);
+    setError(null);
+    const supabase = createClient();
+    const { error: deleteError } = await supabase.from("dishes").delete().eq("id", dishId);
+    if (deleteError) {
+      setDeleting(false);
+      return setError(
+        dbErrorMessage(deleteError, { inUse: "Este plato ya se pidió: márcalo como agotado en lugar de eliminarlo." }),
+      );
+    }
+    // Su foto, si estaba en Storage, ya no se usa.
+    const photo = photoUrl?.split(`/${BUCKET}/`)[1];
+    if (photo) await supabase.storage.from(BUCKET).remove([photo]);
     router.push("/admin/menu");
   }
 
@@ -330,9 +355,40 @@ export function DishForm({ dishId }: { dishId: string | null }) {
                 </label>
                 <p className="text-sm text-muted">Aparece entre los favoritos del restaurante.</p>
               </Card>
+
+              {!isNew && ordered === false && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="flex w-fit cursor-pointer items-center gap-1.5 px-1 text-sm text-primary hover:underline"
+                >
+                  <Trash2 className="size-4" aria-hidden /> Eliminar plato
+                </button>
+              )}
+              {!isNew && ordered && (
+                <p className="px-1 text-sm text-muted">
+                  Este plato ya se pidió, así que no se puede eliminar: márcalo como agotado para sacarlo de los pedidos.
+                </p>
+              )}
             </div>
           </form>
         )}
+
+        <Modal
+          open={confirmDelete}
+          onClose={() => setConfirmDelete(false)}
+          icon={<Trash2 aria-hidden />}
+          title={`¿Eliminar ${name || "el plato"}?`}
+          description="El plato y sus adicionales dejarán de existir. Como nunca se pidió, no afecta ningún pedido."
+        >
+          {error && confirmDelete && <p className="text-sm text-primary">{error}</p>}
+          <Button onClick={removeDish} loading={deleting}>
+            Eliminar plato
+          </Button>
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+            Cancelar
+          </Button>
+        </Modal>
       </main>
     </>
   );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, RefreshCw } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +14,8 @@ import { tableLabel } from "@/lib/order-format";
 import { RESTAURANT_NAME } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/client";
 import { FormSkeleton } from "@/components/ui/Skeleton";
+import { Modal } from "@/components/ui/Modal";
+import { dbErrorMessage } from "@/lib/rpc-errors";
 
 type Table = { number: number; zone: string; qr_token: string; active: boolean };
 type Format = "png" | "svg";
@@ -27,6 +29,27 @@ export function TableQr({ tableId }: { tableId: string }) {
   const [notFound, setNotFound] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [format, setFormat] = useState<Format>("png");
+  const [confirmRegenerate, setConfirmRegenerate] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
+
+  /** Cambia el token: el QR impreso deja de abrir la carta y hay que imprimir el nuevo. */
+  async function regenerate() {
+    setRegenerating(true);
+    setRegenerateError(null);
+    const token = crypto.randomUUID().replaceAll("-", "");
+    const { data, error } = await createClient()
+      .from("tables")
+      .update({ qr_token: token })
+      .eq("id", tableId)
+      .select("number, zone, qr_token, active")
+      .single();
+    setRegenerating(false);
+    if (error) return setRegenerateError(dbErrorMessage(error));
+    setTable(data);
+    setPreview(await QRCode.toDataURL(qrUrl(data.qr_token), { width: 480, margin: 0, errorCorrectionLevel: "M" }));
+    setConfirmRegenerate(false);
+  }
 
   useEffect(() => {
     createClient()
@@ -136,9 +159,33 @@ export function TableQr({ tableId }: { tableId: string }) {
               <InfoNote plain title="Recomendación de impresión">
                 Usa un tamaño mínimo de 6 × 6 cm, papel mate y buen contraste. Evita dobleces o reflejos sobre el código.
               </InfoNote>
+              <button
+                type="button"
+                onClick={() => setConfirmRegenerate(true)}
+                className="flex w-fit cursor-pointer items-center gap-1.5 px-4 text-sm text-primary hover:underline"
+              >
+                <RefreshCw className="size-4" aria-hidden /> Generar un QR nuevo
+              </button>
             </div>
           </div>
         )}
+
+        {/* Por si el QR impreso se dañó, se copió o se usa desde fuera del local. */}
+        <Modal
+          open={confirmRegenerate}
+          onClose={() => setConfirmRegenerate(false)}
+          icon={<RefreshCw aria-hidden />}
+          title="¿Generar un QR nuevo?"
+          description="El código impreso actual dejará de abrir la carta. Tendrás que imprimir y reemplazar el de la mesa. Quienes ya están sentados siguen en su estadía."
+        >
+          {regenerateError && <p className="text-sm text-primary">{regenerateError}</p>}
+          <Button onClick={regenerate} loading={regenerating}>
+            Generar QR nuevo
+          </Button>
+          <Button variant="secondary" onClick={() => setConfirmRegenerate(false)}>
+            Cancelar
+          </Button>
+        </Modal>
       </main>
     </>
   );
