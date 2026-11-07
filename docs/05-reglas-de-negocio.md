@@ -31,3 +31,7 @@ Tomadas para poder avanzar; se pueden cambiar.
 - [ ] ¿Qué pasa si el cliente se va sin pagar? ¿Se marca de alguna forma al cerrar?
 - [ ] ¿Cuánto tiempo sin actividad antes de avisar que una mesa sigue abierta?
 - [ ] ¿Desde cuántos minutos un pedido se considera atrasado en cocina?
+- [ ] Si el cliente recarga la página después de que el garzón cerró la mesa, hoy se abre una
+      sesión nueva y la mesa aparece ocupada. Opciones: bloquear al mismo celular por 30 min
+      (en la base, `join_table`), ocupar la mesa recién con el primer pedido, o recordarlo solo
+      en el navegador. Ninguna evita que se reabra desde una ventana de incógnito.
