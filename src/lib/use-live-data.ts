@@ -11,6 +11,7 @@ type LiveTable = "order_items" | "orders" | "waiter_calls" | "table_sessions";
  *
  * - Carga recién cuando el canal queda SUBSCRIBED: cambios hechos antes se perderían.
  * - Al reconectar vuelve a cargar, porque Realtime no reenvía lo ocurrido sin conexión.
+ * - `live` es null mientras se conecta por primera vez, para no mostrar "Sin conexión" al abrir la vista.
  */
 export function useLiveData<T>(
   channelName: string,
@@ -20,7 +21,8 @@ export function useLiveData<T>(
 ) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [live, setLive] = useState(false);
+  // null: conectando por primera vez · true: en vivo · false: se perdió la conexión.
+  const [live, setLive] = useState<boolean | null>(null);
 
   // La función de carga más reciente, sin re-suscribir en cada render.
   const loadRef = useRef(load);
@@ -58,7 +60,8 @@ export function useLiveData<T>(
         setLive(true);
         reload();
       } else {
-        setLive(false);
+        // Solo es "sin conexión" si ya había estado en vivo o si el canal falló.
+        setLive((current) => (current === null && status !== "CHANNEL_ERROR" && status !== "TIMED_OUT" ? null : false));
       }
     });
 

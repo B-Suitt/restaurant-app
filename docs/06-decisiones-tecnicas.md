@@ -38,7 +38,10 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 
 - `useLiveData` (`src/lib/use-live-data.ts`) aplica estas reglas: se suscribe, carga al quedar
   `SUBSCRIBED`, recarga ante cualquier cambio y al reconectar, y expone `live` para el aviso
-  "Sin conexión · reconectando…".
+  "Sin conexión · reconectando…" (`null` mientras conecta por primera vez: muestra "Conectando…").
+- `OfflineBanner` (layout raíz) avisa en todas las vistas cuando el dispositivo pierde internet.
+- La vista del cliente comprueba cada 30 s (y al volver a la pestaña) que su sesión siga abierta:
+  al cerrarse la mesa, RLS deja de mostrarla y Realtime no avisa.
 
 ### Panel de administrador
 - Crear usuarios requiere la API de administración de Supabase: se usa `SUPABASE_SECRET_KEY`

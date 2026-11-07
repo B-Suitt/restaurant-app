@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,7 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es-CL" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="flex min-h-full flex-col font-sans">
+        <OfflineBanner />
+        {children}
+      </body>
     </html>
   );
 }

@@ -10,7 +10,7 @@ import { useProfileName } from "@/lib/use-profile";
 type Crumb = { label: string; href?: string };
 
 /** Barra superior del administrador: ruta de navegación, estado en vivo y usuario. */
-export function AdminTopBar({ crumbs, live }: { crumbs: Crumb[]; live?: boolean }) {
+export function AdminTopBar({ crumbs, live }: { crumbs: Crumb[]; live?: boolean | null }) {
   const name = useProfileName();
   const initials = name
     ?.split(/\s+/)
