@@ -10,7 +10,7 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { formatPrice } from "@/lib/format-price";
 import { statusTime, tableLabel } from "@/lib/order-format";
-import { ORDER_ITEM_STATUSES, type OrderItemStatus } from "@/lib/order-status";
+import { orderStatusOf, type OrderItemStatus } from "@/lib/order-status";
 import { KITCHEN_TARGET_MINUTES } from "@/lib/restaurant";
 import { itemTotal, sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
@@ -61,15 +61,7 @@ async function loadDashboard() {
 type Data = Awaited<ReturnType<typeof loadDashboard>>;
 type Order = Data["orders"][number];
 
-/** Estado del pedido: el del plato menos avanzado (sin contar cancelados). */
-function orderStatus(order: Order): OrderItemStatus {
-  const items = order.order_items.filter((i) => i.status !== "cancelado");
-  if (items.length === 0) return "cancelado";
-  return items.reduce<OrderItemStatus>((least, i) => {
-    const s = i.status as OrderItemStatus;
-    return ORDER_ITEM_STATUSES.indexOf(s) < ORDER_ITEM_STATUSES.indexOf(least) ? s : least;
-  }, "entregado");
-}
+const orderStatus = (order: Order) => orderStatusOf(order.order_items);
 
 function summarize(data: Data, now: number) {
   const occupied = data.sessions.length;

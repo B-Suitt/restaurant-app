@@ -22,3 +22,13 @@ export const ORDER_ITEM_STATUS_DISPLAY: Record<
   entregado: { label: "Entregado", tone: "neutral" },
   cancelado: { label: "Cancelado", tone: "danger" },
 };
+
+/** Estado de un pedido completo: el de su plato menos avanzado, sin contar cancelados. */
+export function orderStatusOf(items: { status: string }[]): OrderItemStatus {
+  const active = items.filter((i) => i.status !== "cancelado");
+  if (active.length === 0) return "cancelado";
+  return active.reduce<OrderItemStatus>((least, i) => {
+    const s = i.status as OrderItemStatus;
+    return ORDER_ITEM_STATUSES.indexOf(s) < ORDER_ITEM_STATUSES.indexOf(least) ? s : least;
+  }, "entregado");
+}
