@@ -29,7 +29,9 @@ export function LoginForm({ footnote }: { footnote: string }) {
       setError(
         authError?.message.match(/fetch|network/i)
           ? "Sin conexión. Revisa tu internet e inténtalo de nuevo."
-          : "Correo o contraseña incorrectos.",
+          : authError?.message.match(/banned/i)
+            ? "Tu cuenta está desactivada. Habla con el administrador."
+            : "Correo o contraseña incorrectos.",
       );
       return;
     }

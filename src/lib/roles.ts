@@ -14,3 +14,10 @@ export function requiredRole(pathname: string): StaffRole | null {
   }
   return null;
 }
+
+/** Nombre visible de cada rol. */
+export const ROLE_LABEL: Record<StaffRole, string> = {
+  admin: "Administrador",
+  waiter: "Garzón",
+  kitchen: "Cocina",
+};
