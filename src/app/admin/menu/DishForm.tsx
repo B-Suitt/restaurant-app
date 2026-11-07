@@ -57,7 +57,7 @@ export function DishForm({ dishId }: { dishId: string | null }) {
         dishId
           ? supabase
               .from("dishes")
-              .select("name, category_id, description, price, available, featured, photo_url, dish_extras(id, name, price)")
+              .select("name, category_id, description, price, available, featured, photo_url, dish_extras(id, name, price, active)")
               .eq("id", dishId)
               .maybeSingle()
           : null,
@@ -72,8 +72,10 @@ export function DishForm({ dishId }: { dishId: string | null }) {
         setAvailable(d.available);
         setFeatured(d.featured);
         setPhotoUrl(d.photo_url);
-        setExtras(d.dish_extras.map((e) => ({ key: e.id, id: e.id, name: e.name, price: e.price })));
-        setOriginalExtraIds(d.dish_extras.map((e) => e.id));
+        // Los retirados no se muestran: para la carta ya no existen.
+        const current = d.dish_extras.filter((e) => e.active);
+        setExtras(current.map((e) => ({ key: e.id, id: e.id, name: e.name, price: e.price })));
+        setOriginalExtraIds(current.map((e) => e.id));
       } else {
         setCategoryId(cats.data?.[0]?.id ?? "");
       }
@@ -129,7 +131,9 @@ export function DishForm({ dishId }: { dishId: string | null }) {
       if (photo.error) return fail(photo.error);
       setPhotoFile(null);
       setPhotoUrl(url);
-      // La foto anterior queda en Storage sin uso (borrarla requiere una política de lectura; ver docs/06).
+      // La foto anterior, si estaba en Storage, ya no se usa. Si no se puede borrar, el plato igual queda guardado.
+      const previous = photoUrl?.split(`/${BUCKET}/`)[1];
+      if (previous) await supabase.storage.from(BUCKET).remove([previous]);
     }
 
     // Adicionales: actualiza los existentes, crea los nuevos y quita los eliminados.
@@ -156,23 +160,16 @@ export function DishForm({ dishId }: { dishId: string | null }) {
       setOriginalExtraIds((all) => [...all, ...inserted.data.map((r) => r.id)]);
     }
 
+    // Quitados: se borran; si ya se pidieron (los referencia el historial), se retiran de la carta.
     const removed = originalExtraIds.filter((oid) => !cleanExtras.some((e) => e.id === oid));
-    if (removed.length) {
-      const deleted = await supabase.from("dish_extras").delete().in("id", removed);
-      if (deleted.error) {
-        // Vuelve a mostrar los adicionales tal como quedaron en la base.
-        const current = await supabase.from("dish_extras").select("id, name, price").eq("dish_id", id);
-        if (current.data) {
-          setExtras(current.data.map((e) => ({ key: e.id, id: e.id, name: e.name, price: e.price })));
-          setOriginalExtraIds(current.data.map((e) => e.id));
-        }
-        return fail(
-          deleted.error,
-          deleted.error.code === "23503"
-            ? "El plato se guardó, pero un adicional que quitaste ya se pidió antes y no se puede eliminar. Puedes cambiarle el nombre o el precio."
-            : undefined,
-        );
-      }
+    for (const extraId of removed) {
+      const deleted = await supabase.from("dish_extras").delete().eq("id", extraId);
+      const result =
+        deleted.error?.code === "23503"
+          ? await supabase.from("dish_extras").update({ active: false }).eq("id", extraId)
+          : deleted;
+      if (result.error) return fail(result.error);
+      setOriginalExtraIds((all) => all.filter((x) => x !== extraId));
     }
 
     router.push("/admin/menu");

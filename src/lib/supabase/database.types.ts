@@ -39,14 +39,14 @@ export type Database = {
                   ]
                 },"dish_extras": {
                   Row: {
-                    "dish_id": string,"id": string,"name": string,"price": number
+                    "active": boolean,"dish_id": string,"id": string,"name": string,"price": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "dish_id": string,"id"?: string,"name": string,"price"?: number
+                    "active"?: boolean,"dish_id": string,"id"?: string,"name": string,"price"?: number
                   }
                   Update: {
-                    "dish_id"?: string,"id"?: string,"name"?: string,"price"?: number
+                    "active"?: boolean,"dish_id"?: string,"id"?: string,"name"?: string,"price"?: number
                   }
                   Relationships: [
                     {

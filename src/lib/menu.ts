@@ -20,7 +20,7 @@ export async function loadMenu(): Promise<{ categories: MenuCategory[]; dishes: 
     supabase.from("categories").select("id, name, description, sort_order").order("sort_order"),
     supabase
       .from("dishes")
-      .select("id, category_id, name, description, price, photo_url, available, sort_order, dish_extras(id, name, price)")
+      .select("id, category_id, name, description, price, photo_url, available, sort_order, dish_extras(id, name, price, active)")
       .order("sort_order"),
   ]);
   if (categories.error || dishes.error) throw categories.error ?? dishes.error;
@@ -29,6 +29,11 @@ export async function loadMenu(): Promise<{ categories: MenuCategory[]; dishes: 
     categories: categories.data,
     dishes: dishes.data
       .filter((d) => order.has(d.category_id))
+      // Los adicionales retirados no se ofrecen (siguen en el historial de pedidos).
+      .map(({ dish_extras, ...d }) => ({
+        ...d,
+        dish_extras: dish_extras.filter((e) => e.active).map(({ id, name, price }) => ({ id, name, price })),
+      }))
       .sort((a, b) => order.get(a.category_id)! - order.get(b.category_id)! || a.sort_order - b.sort_order),
   };
 }

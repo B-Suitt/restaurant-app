@@ -1,7 +1,7 @@
 -- Reglas de negocio y permisos. Correr con: npx supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(30);
 
 -- ---------------------------------------------------------------------------
 -- Preparación (como postgres)
@@ -162,6 +162,21 @@ select is((select count(*)::int from public.orders), 0, 'con la mesa cerrada el 
 select throws_ok(
   $$ insert into public.categories (name) values ('Hack') $$,
   '42501', null, 'un cliente no puede modificar la carta'
+);
+
+-- ---------------------------------------------------------------------------
+-- Adicionales retirados
+-- ---------------------------------------------------------------------------
+reset role;
+update public.dish_extras set active = false where id = '40000000-0000-0000-0000-000000000001';
+select tests.login('10000000-0000-0000-0000-0000000000a3');
+select throws_ok(
+  format($$ select public.place_order(%L, '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1,"extra_ids":["40000000-0000-0000-0000-000000000001"]}]') $$, current_setting('t.s2')),
+  'P0001', 'extra_not_found', 'un adicional retirado no se puede pedir'
+);
+select lives_ok(
+  format($$ select public.place_order(%L, '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]') $$, current_setting('t.s2')),
+  'el plato se sigue pidiendo sin el adicional retirado'
 );
 
 select * from finish();

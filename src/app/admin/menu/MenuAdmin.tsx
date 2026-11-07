@@ -27,7 +27,7 @@ async function loadDishes() {
     supabase.from("categories").select("id, name, sort_order, active").order("sort_order"),
     supabase
       .from("dishes")
-      .select("id, category_id, name, description, price, photo_url, available, featured, sort_order, dish_extras(id, name, price)")
+      .select("id, category_id, name, description, price, photo_url, available, featured, sort_order, dish_extras(id, name, price, active)")
       .order("sort_order"),
   ]);
   if (categories.error || dishes.error) throw categories.error ?? dishes.error;
@@ -163,8 +163,8 @@ export function MenuAdmin() {
                       {dish.available ? <Chip tone="success">Disponible</Chip> : <Chip tone="neutral">Agotado</Chip>}
                     </TableCell>
                     <TableCell className="text-muted">
-                      {dish.dish_extras.length
-                        ? dish.dish_extras.map((e) => `${e.name} +${formatPrice(e.price)}`).join(" · ")
+                      {dish.dish_extras.some((e) => e.active)
+                        ? dish.dish_extras.filter((e) => e.active).map((e) => `${e.name} +${formatPrice(e.price)}`).join(" · ")
                         : "Sin adicionales"}
                     </TableCell>
                     <TableCell>
