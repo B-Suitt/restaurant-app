@@ -32,8 +32,10 @@ export function ShiftStart({ children, description }: { children: ReactNode; des
             <p className="text-base text-muted">{description}</p>
             <Button
               autoFocus
-              onClick={async () => {
-                await startShift().catch(() => {});
+              onClick={() => {
+                // Se llama dentro del clic (el navegador exige un gesto para el sonido), pero sin esperarlo:
+                // si el audio tarda o el navegador lo bloquea, el turno igual comienza.
+                startShift().catch(() => {});
                 setStarted(true);
               }}
             >
