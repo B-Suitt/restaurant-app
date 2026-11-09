@@ -20,6 +20,8 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 | 2026-11-06 | Vista del cliente con `instant = false` | Necesita la sesión anónima y la mesa antes de mostrar algo; dentro, la navegación es instantánea |
 | 2026-11-06 | Un solo `/login` para todo el personal | Móvil con el diseño de "Garzón · Acceso"; pantalla ancha con el diseño dividido de "Cocina · Acceso" |
 | 2026-11-06 | Carrito guardado en el navegador por sesión de mesa | Sobrevive a recargas; cada celular arma su propio carrito |
+| 2026-11-09 | La mesa se ve ocupada desde el primer pedido o llamado, no desde el escaneo | Abrir o recargar el enlace no debe ocupar una mesa; la sesión vacía se reutiliza |
+| 2026-11-09 | El QR impreso lleva `?scan=1` y la app lo quita al entrar | Distingue un escaneo de una recarga para no abrir otra estadía tras el cierre. No es seguridad: una foto del QR sigue funcionando |
 
 ## Notas de implementación
 
@@ -41,7 +43,7 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
   "Sin conexión · reconectando…" (`null` mientras conecta por primera vez: muestra "Conectando…").
 - `OfflineBanner` (layout raíz) avisa en todas las vistas cuando el dispositivo pierde internet.
 - La vista del cliente comprueba cada 30 s (y al volver a la pestaña) que su sesión siga abierta:
-  al cerrarse la mesa, RLS deja de mostrarla y Realtime no avisa.
+  al cerrarse la mesa, RLS deja de mostrarla y Realtime no avisa. Al detectarlo lo lleva a `/gracias`.
 
 ### Panel de administrador
 - Crear usuarios requiere la API de administración de Supabase: se usa `SUPABASE_SECRET_KEY`

@@ -27,16 +27,19 @@ async function loadTables() {
   const supabase = createClient();
   const [tables, sessions] = await Promise.all([
     supabase.from("tables").select("id, number, capacity, zone, active, table_sessions(count)").order("number"),
-    supabase.from("table_sessions").select("table_id, waiter_calls(type, attended_at)").eq("status", "open"),
+    supabase.from("table_sessions").select("table_id, orders(id), waiter_calls(type, attended_at)").eq("status", "open"),
   ]);
   if (tables.error || sessions.error) throw tables.error ?? sessions.error;
   const open = new Map(sessions.data.map((s) => [s.table_id, s]));
-  return tables.data.map((t) => ({
-    ...t,
-    hasHistory: (t.table_sessions[0]?.count ?? 0) > 0,
-    isOpen: open.has(t.id),
-    status: tableStatus(open.get(t.id)),
-  }));
+  return tables.data.map((t) => {
+    const status = tableStatus(open.get(t.id));
+    return {
+      ...t,
+      hasHistory: (t.table_sessions[0]?.count ?? 0) > 0,
+      isOpen: status !== "libre",
+      status,
+    };
+  });
 }
 
 type AdminTable = Awaited<ReturnType<typeof loadTables>>[number];
@@ -44,7 +47,7 @@ type StatusFilter = TableStatus | "inactiva" | "";
 
 // Frame "Administrador · Mesas y QR"
 export function TablesAdmin() {
-  const { data: tables, live, reload } = useLiveData("admin-tables", ["table_sessions", "waiter_calls"], loadTables);
+  const { data: tables, live, reload } = useLiveData("admin-tables", ["table_sessions", "waiter_calls", "orders"], loadTables);
   const [query, setQuery] = useState("");
   const [zone, setZone] = useState("");
   const [status, setStatus] = useState<StatusFilter>("");

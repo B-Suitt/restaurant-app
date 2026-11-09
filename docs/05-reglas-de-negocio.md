@@ -6,7 +6,7 @@ Tomadas para poder avanzar; se pueden cambiar.
 
 | # | Regla |
 |---|---|
-| 1 | El primer escaneo del QR abre la sesión de la mesa si no hay una abierta; los siguientes se unen a la misma. |
+| 1 | El primer escaneo del QR abre la sesión de la mesa si no hay una abierta; los siguientes se unen a la misma. La mesa sigue libre hasta el primer pedido o llamado. |
 | 2 | Todas las rondas de una sesión suman a una sola cuenta. |
 | 3 | El estado es por plato, no por pedido completo. |
 | 4 | Un plato solo se puede cancelar mientras está en Recibido. |
@@ -21,6 +21,7 @@ Tomadas para poder avanzar; se pueden cambiar.
 | 13 | Cerrar una mesa con platos sin entregar no se bloquea: el modal avisa cuántos quedan. Al cerrar, los llamados pendientes quedan atendidos. |
 | 14 | Una mesa con historial no se elimina: se desactiva. Una mesa con una estadía abierta no se elimina ni se desactiva (sí se puede editar su número, zona o capacidad). |
 | 15 | El historial de pedidos incluye los de mesas abiertas y cerradas. |
+| 16 | Al cerrarse la mesa, el cliente pasa a una página de agradecimiento (`/gracias`). Recargar o volver atrás no abre otra estadía; para volver a pedir hay que escanear el QR. |
 
 ## Preguntas abiertas
 
@@ -31,7 +32,3 @@ Tomadas para poder avanzar; se pueden cambiar.
 - [ ] ¿Qué pasa si el cliente se va sin pagar? ¿Se marca de alguna forma al cerrar?
 - [ ] ¿Cuánto tiempo sin actividad antes de avisar que una mesa sigue abierta?
 - [ ] ¿Desde cuántos minutos un pedido se considera atrasado en cocina?
-- [ ] Si el cliente recarga la página después de que el garzón cerró la mesa, hoy se abre una
-      sesión nueva y la mesa aparece ocupada. Opciones: bloquear al mismo celular por 30 min
-      (en la base, `join_table`), ocupar la mesa recién con el primer pedido, o recordarlo solo
-      en el navegador. Ninguna evita que se reabra desde una ventana de incógnito.

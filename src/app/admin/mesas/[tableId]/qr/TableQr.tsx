@@ -20,8 +20,8 @@ import { dbErrorMessage } from "@/lib/rpc-errors";
 type Table = { number: number; zone: string; qr_token: string; active: boolean };
 type Format = "png" | "svg";
 
-/** Dirección que abre el QR: la carta de la mesa en este mismo sitio. */
-const qrUrl = (token: string) => `${window.location.origin}/m/${encodeURIComponent(token)}`;
+/** Dirección que abre el QR: la carta de la mesa en este mismo sitio. `scan` distingue un escaneo de una recarga. */
+const qrUrl = (token: string) => `${window.location.origin}/m/${encodeURIComponent(token)}?scan=1`;
 
 // Frame "Administrador · Código QR de la mesa"
 export function TableQr({ tableId }: { tableId: string }) {

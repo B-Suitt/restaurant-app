@@ -10,13 +10,17 @@ export const TABLE_STATUS_DISPLAY: Record<TableStatus, { label: string; tone: Ch
   pidiendo_cuenta: { label: "Pidiendo la cuenta", tone: "accent" },
 };
 
-/** Estado de una mesa según su sesión abierta y sus llamados pendientes. La cuenta pesa más que un llamado. */
+/**
+ * Estado de una mesa según su sesión abierta, sus pedidos y sus llamados pendientes.
+ * La cuenta pesa más que un llamado. Escanear el QR crea la sesión, pero la mesa
+ * sigue libre hasta el primer pedido o llamado.
+ */
 export function tableStatus(
-  session: { waiter_calls: { type: string; attended_at: string | null }[] } | null | undefined,
+  session: { waiter_calls: { type: string; attended_at: string | null }[]; orders: unknown[] } | null | undefined,
 ): TableStatus {
   if (!session) return "libre";
   const pending = session.waiter_calls.filter((c) => c.attended_at === null);
   if (pending.some((c) => c.type === "bill")) return "pidiendo_cuenta";
   if (pending.some((c) => c.type === "call")) return "llamando";
-  return "ocupada";
+  return session.orders.length > 0 ? "ocupada" : "libre";
 }

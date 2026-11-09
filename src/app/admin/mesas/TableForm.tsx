@@ -40,7 +40,7 @@ export function TableForm({ tableId }: { tableId: string | null }) {
         supabase.from("tables").select("zone, number").order("number"),
         tableId ? supabase.from("tables").select("number, zone, capacity, active").eq("id", tableId).maybeSingle() : null,
         tableId
-          ? supabase.from("table_sessions").select("waiter_calls(type, attended_at)").eq("table_id", tableId).eq("status", "open").maybeSingle()
+          ? supabase.from("table_sessions").select("orders(id), waiter_calls(type, attended_at)").eq("table_id", tableId).eq("status", "open").maybeSingle()
           : null,
       ]);
       const allZones = [...new Set(["Salón", "Terraza", ...(zones.data?.map((z) => z.zone) ?? [])])];
@@ -58,7 +58,8 @@ export function TableForm({ tableId }: { tableId: string | null }) {
         const max = Math.max(0, ...(zones.data?.map((z) => z.number) ?? []));
         setNumber(String(max + 1));
       }
-      setLoaded({ zones: allZones, status: tableId ? tableStatus(session?.data) : null, isOpen: !!session?.data });
+      const status = tableId ? tableStatus(session?.data) : null;
+      setLoaded({ zones: allZones, status, isOpen: status !== null && status !== "libre" });
     })();
   }, [tableId]);
 

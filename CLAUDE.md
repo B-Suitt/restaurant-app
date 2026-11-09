@@ -70,7 +70,7 @@ Seguir el mismo estilo visual para:
 - Tests de base de datos: `npm run db:test`
 - Regenerar tipos tras cambiar el esquema: `npm run db:types`
 - Usuarios de prueba (contraseña `restaurante123`): `admin@`, `garzon@`, `cocina@restaurante.cl`.
-  QR de prueba: `/m/mesa-01` … `/m/mesa-08`.
+  QR de prueba: `/m/mesa-01?scan=1` … `/m/mesa-08?scan=1` (sin `?scan=1` se trata como recarga).
 - Si en desarrollo faltan estilos de Tailwind (clases que no se aplican), detener `npm run dev`,
   borrar la carpeta `.next` y volver a iniciarlo: la caché de Turbopack puede quedar desactualizada.
 
@@ -79,6 +79,7 @@ Seguir el mismo estilo visual para:
 | Ruta | Rol | Acceso |
 |---|---|---|
 | `/m/[qrToken]` | Cliente | Público, vía QR |
+| `/gracias` | Cliente | Público; destino al cerrarse la mesa |
 | `/garzon` | Garzón | Login, rol `waiter` |
 | `/cocina` | Cocina | Login, rol `kitchen` |
 | `/admin` | Administrador | Login, rol `admin` |

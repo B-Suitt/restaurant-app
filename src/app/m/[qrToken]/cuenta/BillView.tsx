@@ -26,7 +26,8 @@ async function loadBill(sessionId: string) {
     .map((o) => ({ ...o, order_items: o.order_items.filter((i) => i.status !== "cancelado") }))
     .filter((o) => o.order_items.length > 0)
     .reverse();
-  return { rounds, openedAt: session.data.opened_at };
+  // La sesión pudo crearse mucho antes de que llegaran estos clientes.
+  return { rounds, openedAt: orders.at(-1)?.created_at ?? session.data.opened_at };
 }
 
 // Frame "Cliente · Cuenta de la mesa"

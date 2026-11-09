@@ -66,7 +66,7 @@ type Order = Data["orders"][number];
 const orderStatus = (order: Order) => orderStatusOf(order.order_items);
 
 function summarize(data: Data, now: number) {
-  const occupied = data.sessions.length;
+  const occupied = data.sessions.filter((s) => tableStatus(s) !== "libre").length;
   const totalTables = data.tables.length;
 
   const byStatus: Record<OrderItemStatus, number> = {
@@ -105,7 +105,7 @@ function summarize(data: Data, now: number) {
   const tableById = new Map(data.tables.map((t) => [t.id, t]));
   const attention = data.sessions
     .map((s) => ({ session: s, table: tableById.get(s.table_id), status: tableStatus(s), total: sessionTotal(s.orders) }))
-    .filter((r) => r.table)
+    .filter((r) => r.table && r.status !== "libre")
     .sort(
       (a, b) =>
         Number(b.status !== "ocupada") - Number(a.status !== "ocupada") || a.table!.number - b.table!.number,

@@ -51,7 +51,8 @@ async function loadTable(tableId: string) {
       order.order_items.sort((a, b) => a.dishes.name.localeCompare(b.dishes.name, "es"));
     }
   }
-  return { table: table.data, session: session.data };
+  // Una sesión sin pedidos ni llamados es una mesa libre: al tomar el pedido se reutiliza.
+  return { table: table.data, session: tableStatus(session.data) === "libre" ? null : session.data };
 }
 
 type Session = NonNullable<Awaited<ReturnType<typeof loadTable>>["session"]>;
@@ -120,7 +121,8 @@ export function TableDetail({ tableId }: { tableId: string }) {
                 ? [
                     session.guest_count && `${session.guest_count} personas`,
                     table.zone,
-                    `Abierta a las ${formatClock(session.opened_at)}`,
+                    // La sesión pudo crearse mucho antes de que llegaran estos clientes.
+                    `Abierta a las ${formatClock(session.orders.at(-1)?.created_at ?? session.opened_at)}`,
                   ]
                     .filter(Boolean)
                     .join(" · ")

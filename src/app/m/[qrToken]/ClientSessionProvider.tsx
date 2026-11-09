@@ -1,12 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { errorMessage } from "@/lib/rpc-errors";
 import { loadMenu, type MenuCategory, type MenuDish } from "@/lib/menu";
 export type { MenuCategory, MenuDish, MenuExtra } from "@/lib/menu";
 export { tableLabel } from "@/lib/order-format";
-import { InvalidQrScreen, LoadingScreen, TableClosedScreen } from "./ClientScreens";
+import { InvalidQrScreen, LoadingScreen } from "./ClientScreens";
 
 export type CartLine = { key: string; dishId: string; quantity: number; note: string; extraIds: string[] };
 
@@ -52,19 +53,57 @@ export function linePrice(line: CartLine, dish: MenuDish | undefined) {
   return (dish.price + extras) * line.quantity;
 }
 
-// Una sola entrada por QR aunque React monte el efecto dos veces en desarrollo.
-const joins = new Map<string, Promise<SessionData>>();
+/** Página a la que va el cliente cuando su mesa se cierra. */
+const THANKS_PATH = "/gracias";
 
+/** Sesión de la última estadía de este celular en la mesa: permite reconocer una recarga después del cierre. */
+const visitKey = (qrToken: string) => `visit:${qrToken}`;
+
+function readVisit(qrToken: string) {
+  try {
+    return localStorage.getItem(visitKey(qrToken));
+  } catch {
+    return null;
+  }
+}
+
+function saveVisit(qrToken: string, sessionId: string) {
+  try {
+    localStorage.setItem(visitKey(qrToken), sessionId);
+  } catch {
+    // Navegación privada o almacenamiento bloqueado: se comporta como un escaneo.
+  }
+}
+
+/** El QR impreso lleva `?scan=1`. Se quita al entrar para que una recarga no cuente como escaneo. */
+function consumeScanMark() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("scan")) return false;
+  url.searchParams.delete("scan");
+  window.history.replaceState(null, "", url);
+  return true;
+}
+
+// Una sola entrada por QR aunque React monte el efecto dos veces en desarrollo.
+const joins = new Map<string, Promise<SessionData | null>>();
+
+/** Entra a la mesa. Devuelve `null` si este celular vuelve a una estadía que ya terminó. */
 function joinTable(qrToken: string) {
   let promise = joins.get(qrToken);
   if (!promise) {
-    promise = (async () => {
+    promise = (async (): Promise<SessionData | null> => {
+      const scanned = consumeScanMark();
       const supabase = createClient();
       const { data: auth } = await supabase.auth.getSession();
       if (!auth.session) {
         const { error } = await supabase.auth.signInAnonymously();
         if (error) throw error;
       }
+
+      // Recargar después del cierre no abre otra estadía: hay que volver a escanear.
+      const visit = scanned ? null : readVisit(qrToken);
+      if (visit && !(await isSessionOpen(visit))) return null;
+
       const { data: sessionId, error } = await supabase.rpc("join_table", { p_qr_token: qrToken });
       if (error) throw error;
 
@@ -73,6 +112,7 @@ function joinTable(qrToken: string) {
         loadMenu(),
       ]);
       if (session.error) throw session.error;
+      saveVisit(qrToken, sessionId);
       return {
         sessionId,
         tableNumber: session.data.tables.number,
@@ -103,10 +143,15 @@ export function ClientSessionProvider({ qrToken, children }: { qrToken: string; 
   const [error, setError] = useState<string | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [closed, setClosed] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     joinTable(qrToken)
       .then((session) => {
+        if (!session) {
+          router.replace(THANKS_PATH);
+          return;
+        }
         setData(session);
         try {
           setCart(JSON.parse(localStorage.getItem(cartKey(session.sessionId)) ?? "[]"));
@@ -115,7 +160,7 @@ export function ClientSessionProvider({ qrToken, children }: { qrToken: string; 
         }
       })
       .catch((e: { message?: string }) => setError(e.message ?? "error"));
-  }, [qrToken]);
+  }, [qrToken, router]);
 
   // Guarda el carrito en el navegador (sobrevive a recargas, no se comparte entre celulares).
   const sessionId = data?.sessionId;
@@ -155,7 +200,9 @@ export function ClientSessionProvider({ qrToken, children }: { qrToken: string; 
     } catch {
       // Sin almacenamiento: nada que limpiar.
     }
-  }, [sessionId]);
+    joins.delete(qrToken); // al volver atrás debe comprobar la estadía, no reusar la entrada guardada
+    router.replace(THANKS_PATH);
+  }, [sessionId, qrToken, router]);
   useEffect(() => {
     if (!sessionId || closed) return;
     const id = setInterval(checkSession, SESSION_CHECK_MS);
@@ -200,7 +247,7 @@ export function ClientSessionProvider({ qrToken, children }: { qrToken: string; 
   }, [data, qrToken, cart, addToCart, setQuantity, removeLine, clearCart, refreshMenu, rpcError]);
 
   if (error) return <InvalidQrScreen message={errorMessage({ message: error })} />;
-  if (closed && data) return <TableClosedScreen tableNumber={data.tableNumber} />;
+  if (closed) return null; // ya va camino a la página de agradecimiento
   if (!value) return <LoadingScreen />;
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
