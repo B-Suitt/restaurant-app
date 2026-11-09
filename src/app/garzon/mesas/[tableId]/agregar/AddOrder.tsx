@@ -2,28 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { UserRound } from "lucide-react";
-import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
-import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { DishPhoto } from "@/components/ui/DishPhoto";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input } from "@/components/ui/Field";
 import { FilterTabs } from "@/components/ui/FilterTabs";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { TotalRow } from "@/components/ui/TotalRow";
 import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
 import { loadMenu, type MenuCategory, type MenuDish } from "@/lib/menu";
 import { tableLabel } from "@/lib/order-format";
 import { errorMessage } from "@/lib/rpc-errors";
+import { matchesText } from "@/lib/search";
 import { createClient } from "@/lib/supabase/client";
+import { WaiterHeader } from "../../../WaiterHeader";
 import { WaiterNav } from "../../../WaiterNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DishListSkeleton } from "@/components/ui/Skeleton";
 import { SearchX } from "lucide-react";
-
-/** Texto sin mayúsculas ni tildes, para buscar "limon" y encontrar "Limón". */
-const normalize = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 // Frame "Garzón · Agregar pedido"
 export function AddOrder({ tableId }: { tableId: string }) {
@@ -51,9 +49,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
   const dishById = new Map(menu?.dishes.map((d) => [d.id, d]));
   const visible =
     menu?.dishes.filter(
-      (d) =>
-        (!categoryId || d.category_id === categoryId) &&
-        (!query.trim() || normalize(`${d.name} ${d.description ?? ""}`).includes(normalize(query.trim()))),
+      (d) => (!categoryId || d.category_id === categoryId) && matchesText(`${d.name} ${d.description ?? ""}`, query),
     ) ?? [];
   const lines = Object.entries(quantities)
     .filter(([, q]) => q > 0)
@@ -88,23 +84,10 @@ export function AddOrder({ tableId }: { tableId: string }) {
 
   return (
     <>
-      <AppHeader
-        title="Agregar pedido"
-        subtitle={`${label} · Pedido asistido`}
-        backHref={`/garzon/mesas/${tableId}`}
-        action={
-          <SignOutButton>
-            <HeaderIcon>
-              <UserRound aria-hidden />
-            </HeaderIcon>
-          </SignOutButton>
-        }
-      />
+      <WaiterHeader title="Agregar pedido" subtitle={`${label} · Pedido asistido`} backHref={`/garzon/mesas/${tableId}`} />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         {loadError ? (
-          <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-            {loadError}
-          </p>
+          <ErrorNote>{loadError}</ErrorNote>
         ) : !menu ? (
           <DishListSkeleton />
         ) : (
@@ -168,10 +151,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
                     </li>
                   ))}
                 </ul>
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-lg font-bold">Total a agregar</p>
-                  <p className="text-2xl">{formatPrice(total)}</p>
-                </div>
+                <TotalRow label="Total a agregar" amount={total} />
               </div>
             )}
 
@@ -179,11 +159,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
               <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Sin notas" maxLength={200} />
             </Field>
 
-            {error && (
-              <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                {error}
-              </p>
-            )}
+            <ErrorNote>{error}</ErrorNote>
             <Button onClick={send} loading={sending} disabled={count === 0}>
               {count === 0 ? "Elige al menos un plato" : `Enviar a cocina · ${formatPrice(total)}`}
             </Button>

@@ -14,12 +14,12 @@ import { StatusChip } from "@/components/ui/StatusChip";
 import { cn } from "@/lib/cn";
 import { extrasText, statusTime, tableLabel } from "@/lib/order-format";
 import { KITCHEN_TARGET_MINUTES } from "@/lib/restaurant";
-import { errorMessage } from "@/lib/rpc-errors";
 import { playChime } from "@/lib/shift-alerts";
 import { createClient } from "@/lib/supabase/client";
 import { formatAgo, formatClock, formatElapsed } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
+import { useRowAction } from "@/lib/use-row-action";
 
 const COLUMNS = ["recibido", "en_preparacion", "listo_para_entregar"] as const;
 type KitchenStatus = (typeof COLUMNS)[number];
@@ -58,7 +58,7 @@ const dateLabel = new Intl.DateTimeFormat("es-CL", { weekday: "long", day: "2-di
 // Frame "Cocina · Tablero en vivo"
 export function KitchenBoard() {
   const now = useNow();
-  const { data: items, live, reload } = useLiveData("kitchen", ["order_items"], loadItems);
+  const { data: items, live, reload } = useLiveData("kitchen", ["order_items", "table_sessions"], loadItems);
   const [alert, setAlert] = useState<Alert | null>(null);
 
   // Detecta platos nuevos (no presentes en la carga anterior) para la alerta visual y sonora.
@@ -163,8 +163,7 @@ export function KitchenBoard() {
 }
 
 function KitchenCard({ item, now, onChange }: { item: Item; now: number; onChange: () => void }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, run } = useRowAction(onChange);
 
   const status = item.status as KitchenStatus;
   const arrived = new Date(item.orders.created_at).getTime();
@@ -175,16 +174,8 @@ function KitchenCard({ item, now, onChange }: { item: Item; now: number; onChang
   const extras = extrasText(item.order_item_extras);
   const action = NEXT_ACTION[status];
 
-  async function advance() {
-    if (!action) return;
-    setBusy(true);
-    const { error: rpcError } = await createClient().rpc("set_item_status", {
-      p_item_id: item.id,
-      p_status: action.status,
-    });
-    setBusy(false);
-    setError(rpcError ? errorMessage(rpcError) : null);
-    onChange();
+  function advance() {
+    if (action) run(() => createClient().rpc("set_item_status", { p_item_id: item.id, p_status: action.status }));
   }
 
   return (

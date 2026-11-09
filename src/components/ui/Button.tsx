@@ -2,8 +2,8 @@ import type { ButtonHTMLAttributes } from "react";
 import { LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export type ButtonVariant = "primary" | "secondary" | "soft" | "link";
-export type ButtonSize = "md" | "icon";
+type ButtonVariant = "primary" | "secondary" | "soft" | "link";
+type ButtonSize = "md" | "icon";
 
 const base =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap font-normal transition-colors " +

@@ -1,16 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ImagePlus, Plus, Trash2, X } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
-import { Button, buttonClasses } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DishPhoto } from "@/components/ui/DishPhoto";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { FormActions } from "@/components/ui/FormActions";
+import { LinkNotice } from "@/components/ui/LinkNotice";
 import { PriceInput } from "@/components/ui/PriceInput";
-import { dbErrorMessage } from "@/lib/rpc-errors";
+import { dbErrorMessage, isLoadFailure } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { FormSkeleton } from "@/components/ui/Skeleton";
 import { Modal } from "@/components/ui/Modal";
@@ -36,6 +38,7 @@ export function DishForm({ dishId }: { dishId: string | null }) {
 
   const [categories, setCategories] = useState<Category[] | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
@@ -68,6 +71,7 @@ export function DishForm({ dishId }: { dishId: string | null }) {
           : null,
         dishId ? supabase.from("order_items").select("id", { count: "exact", head: true }).eq("dish_id", dishId) : null,
       ]);
+      if (cats.error || isLoadFailure(dish?.error)) return setLoadFailed(true);
       setOrdered(orderedItems ? (orderedItems.count ?? 1) > 0 : null);
       if (dish) {
         if (!dish.data) return setNotFound(true);
@@ -213,22 +217,14 @@ export function DishForm({ dishId }: { dishId: string | null }) {
           subtitle={["Menú", category?.name, isNew ? "Nuevo plato" : name].filter(Boolean).join(" / ")}
         />
 
-        {notFound ? (
-          <Card className="py-10 text-center text-base text-muted">
-            No encontramos ese plato.{" "}
-            <Link href="/admin/menu" className="text-primary hover:underline">
-              Volver al menú
-            </Link>
-          </Card>
+        {loadFailed ? (
+          <ErrorNote>No pudimos cargar el plato. Revisa tu conexión y recarga la página.</ErrorNote>
+        ) : notFound ? (
+          <LinkNotice text="No encontramos ese plato." href="/admin/menu" linkLabel="Volver al menú" />
         ) : !categories ? (
           <FormSkeleton label="Cargando plato…" />
         ) : categories.length === 0 ? (
-          <Card className="py-10 text-center text-base text-muted">
-            Primero crea una categoría.{" "}
-            <Link href="/admin/categorias" className="text-primary hover:underline">
-              Ir a categorías
-            </Link>
-          </Card>
+          <LinkNotice text="Primero crea una categoría." href="/admin/categorias" linkLabel="Ir a categorías" />
         ) : (
           <form onSubmit={save} noValidate className="grid grid-cols-[1fr_390px] items-start gap-6">
             <div className="flex flex-col gap-6">
@@ -308,19 +304,8 @@ export function DishForm({ dishId }: { dishId: string | null }) {
                 </button>
               </Card>
 
-              {error && (
-                <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                  {error}
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <Link href="/admin/menu" className={buttonClasses({ variant: "secondary" })}>
-                  Cancelar
-                </Link>
-                <Button type="submit" loading={saving}>
-                  {isNew ? "Crear plato" : "Guardar plato"}
-                </Button>
-              </div>
+              <ErrorNote>{error}</ErrorNote>
+              <FormActions cancelHref="/admin/menu" submitLabel={isNew ? "Crear plato" : "Guardar plato"} saving={saving} />
             </div>
 
             <div className="flex flex-col gap-6">

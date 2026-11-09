@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 
 type LiveTable = "order_items" | "orders" | "waiter_calls" | "table_sessions";
 
+let mounts = 0;
+
 /**
  * Carga datos y los vuelve a cargar ante cualquier cambio en las tablas indicadas.
  * Realtime solo entrega las filas que RLS permite leer.
@@ -17,7 +19,6 @@ export function useLiveData<T>(
   channelName: string,
   tables: LiveTable[],
   load: () => Promise<T>,
-  { enabled = true }: { enabled?: boolean } = {},
 ) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,6 @@ export function useLiveData<T>(
   const tablesKey = tables.join(",");
 
   useEffect(() => {
-    if (!enabled) return;
     const supabase = createClient();
     let timer: ReturnType<typeof setTimeout> | undefined;
     // Agrupa ráfagas de cambios (p. ej. un pedido con varios platos) en una sola recarga.
@@ -51,27 +51,37 @@ export function useLiveData<T>(
       timer = setTimeout(reload, 150);
     };
 
-    let channel = supabase.channel(channelName);
+    // Nombre único: con el mismo nombre, la librería reutilizaría el canal anterior mientras se cierra.
+    let channel = supabase.channel(`${channelName}-${++mounts}`);
     for (const table of tablesKey.split(",")) {
       channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, scheduleReload);
     }
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        setLive(true);
-        reload();
-      } else {
-        // Solo es "sin conexión" si ya había estado en vivo o si el canal falló.
-        setLive((current) => (current === null && status !== "CHANNEL_ERROR" && status !== "TIMED_OUT" ? null : false));
-      }
+    // Sin esperar el token, al abrir la página el canal se une como anónimo y RLS le oculta todos los cambios.
+    let cancelled = false;
+    supabase.realtime.setAuth().then(() => {
+      if (cancelled) return;
+      channel.subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setLive(true);
+          reload();
+        } else {
+          const failed = status === "CHANNEL_ERROR" || status === "TIMED_OUT";
+          // Sin tiempo real, la vista igual muestra los datos.
+          if (failed) reload();
+          // Solo es "sin conexión" si ya había estado en vivo o si el canal falló.
+          setLive((current) => (current === null && !failed ? null : false));
+        }
+      });
     });
 
     window.addEventListener("online", scheduleReload);
     return () => {
+      cancelled = true;
       clearTimeout(timer);
       window.removeEventListener("online", scheduleReload);
       supabase.removeChannel(channel);
     };
-  }, [channelName, tablesKey, enabled, reload]);
+  }, [channelName, tablesKey, reload]);
 
   return { data, error, live, reload };
 }

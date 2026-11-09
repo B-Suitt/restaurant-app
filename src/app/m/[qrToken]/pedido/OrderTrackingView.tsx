@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Utensils } from "lucide-react";
+import { ReceiptText, Utensils } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { OrderItemRow } from "@/components/ui/OrderItemRow";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { formatPrice } from "@/lib/format-price";
-import { ORDER_ITEM_STATUSES, type OrderItemStatus } from "@/lib/order-status";
-import { createClient } from "@/lib/supabase/client";
-import { itemTotal, loadSessionOrders, type SessionOrder, type SessionOrderItem } from "@/lib/session-orders";
+import { ORDER_ITEM_STATUSES } from "@/lib/order-status";
+import { itemTotal, loadSessionOrders, type SessionOrder } from "@/lib/session-orders";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { ClientNav } from "../ClientNav";
@@ -19,7 +18,6 @@ import { WaiterCallActions } from "../WaiterCallActions";
 import { tableLabel, useClientSession } from "../ClientSessionProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardsSkeleton } from "@/components/ui/Skeleton";
-import { ReceiptText } from "lucide-react";
 
 // Frame "Cliente · Seguimiento"
 export function OrderTrackingView() {
@@ -84,6 +82,7 @@ export function OrderTrackingView() {
 }
 
 function OrderCard({ order, tableNumber, onChange }: { order: SessionOrder; tableNumber: number; onChange: () => void }) {
+  const { rpcError } = useClientSession();
   const active = order.order_items.filter((i) => i.status !== "cancelado");
   const count = active.reduce((sum, i) => sum + i.quantity, 0);
   const total = active.reduce((sum, i) => sum + itemTotal(i), 0);
@@ -100,52 +99,15 @@ function OrderCard({ order, tableNumber, onChange }: { order: SessionOrder; tabl
       </p>
       <ul className="flex flex-col gap-4">
         {order.order_items.map((item) => (
-          <OrderItemRow key={item.id} item={item} onChange={onChange} />
+          <OrderItemRow
+            key={item.id}
+            item={item}
+            confirmText={`¿Cancelar ${item.dishes.name}?`}
+            toMessage={rpcError}
+            onChange={onChange}
+          />
         ))}
       </ul>
     </Card>
-  );
-}
-
-function OrderItemRow({ item, onChange }: { item: SessionOrderItem; onChange: () => void }) {
-  const { rpcError } = useClientSession();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const details = [
-    ...item.order_item_extras.map((e) => (e.price > 0 ? `${e.dish_extras.name} +${formatPrice(e.price)}` : e.dish_extras.name)),
-    item.note,
-  ].filter(Boolean);
-
-  async function cancel() {
-    if (!window.confirm(`¿Cancelar ${item.dishes.name}?`)) return;
-    setBusy(true);
-    const { error: cancelError } = await createClient().rpc("set_item_status", { p_item_id: item.id, p_status: "cancelado" });
-    setBusy(false);
-    setError(cancelError ? rpcError(cancelError) : null);
-    onChange();
-  }
-
-  return (
-    <li className="flex flex-col gap-2.25 border-b border-border pb-4">
-      <p className={item.status === "cancelado" ? "text-base text-muted line-through" : "text-base"}>
-        {item.quantity} × {item.dishes.name}
-      </p>
-      {details.length > 0 && <p className="text-sm text-muted">{details.join(" · ")}</p>}
-      <div className="flex items-center justify-between gap-3">
-        <StatusChip status={item.status as OrderItemStatus} />
-        {/* Solo se puede cancelar mientras el plato está en Recibido. */}
-        {item.status === "recibido" && (
-          <button
-            type="button"
-            onClick={cancel}
-            disabled={busy}
-            className="cursor-pointer text-sm text-primary hover:underline disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-        )}
-      </div>
-      {error && <p className="text-sm text-primary">{error}</p>}
-    </li>
   );
 }

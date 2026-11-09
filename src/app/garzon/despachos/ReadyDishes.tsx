@@ -1,24 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Check, UserRound } from "lucide-react";
-import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
+import { Check, HandPlatter } from "lucide-react";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
-import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { extrasText, statusTime, tableLabel } from "@/lib/order-format";
-import { errorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { formatAgo, formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
+import { useRowAction } from "@/lib/use-row-action";
+import { WaiterHeader } from "../WaiterHeader";
 import { WaiterNav } from "../WaiterNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardsSkeleton } from "@/components/ui/Skeleton";
-import { HandPlatter } from "lucide-react";
 
 async function loadReady() {
   const { data, error } = await createClient()
@@ -44,22 +41,15 @@ type ReadyItem = Awaited<ReturnType<typeof loadReady>>[number];
 // Frame "Garzón · Platos listos"
 export function ReadyDishes() {
   const now = useNow(30_000);
-  const { data: items, live, reload } = useLiveData("waiter-ready", ["order_items"], loadReady);
+  const { data: items, live, reload } = useLiveData("waiter-ready", ["order_items", "table_sessions"], loadReady);
 
   const count = items?.length ?? 0;
 
   return (
     <>
-      <AppHeader
+      <WaiterHeader
         title="Listos para despachar"
         subtitle={items ? `${count} ${count === 1 ? "plato espera" : "platos esperan"} por ti` : undefined}
-        action={
-          <SignOutButton>
-            <HeaderIcon>
-              <UserRound aria-hidden />
-            </HeaderIcon>
-          </SignOutButton>
-        }
       />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         <LiveIndicator live={live} />
@@ -84,21 +74,10 @@ export function ReadyDishes() {
 }
 
 function ReadyCard({ item, now, onChange }: { item: ReadyItem; now: number; onChange: () => void }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, run } = useRowAction(onChange);
   const extras = extrasText(item.order_item_extras);
   const details = [extras.length ? extras.join(" · ") : "Sin adicionales", item.note || "Sin notas"];
-
-  async function deliver() {
-    setBusy(true);
-    const { error: rpcError } = await createClient().rpc("set_item_status", {
-      p_item_id: item.id,
-      p_status: "entregado",
-    });
-    setBusy(false);
-    setError(rpcError ? errorMessage(rpcError) : null);
-    onChange();
-  }
+  const deliver = () => run(() => createClient().rpc("set_item_status", { p_item_id: item.id, p_status: "entregado" }));
 
   return (
     <Card className="flex flex-col gap-3">

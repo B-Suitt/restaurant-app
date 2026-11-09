@@ -232,7 +232,7 @@ export function AdminDashboard() {
                   </div>
                   {s.attention.length === 0 ? (
                     <EmptyState icon={<Armchair aria-hidden />} title="Sin mesas ocupadas">
-                      Cuando un cliente escanee el QR de su mesa, aparecerá aquí.
+                      Cuando una mesa haga su primer pedido o llame al garzón, aparecerá aquí.
                     </EmptyState>
                   ) : (
                     <Table>

@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-export type CardTone = "default" | "highlight" | "alert";
+type CardTone = "default" | "highlight" | "alert";
 
 const tones: Record<CardTone, string> = {
   default: "border border-border",

@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Armchair, UserRound } from "lucide-react";
-import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
+import { Armchair } from "lucide-react";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
-import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Chip } from "@/components/ui/Chip";
 import { FilterTabs } from "@/components/ui/FilterTabs";
 import { cn } from "@/lib/cn";
@@ -17,6 +15,7 @@ import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
 import { useProfileName } from "@/lib/use-profile";
+import { WaiterHeader } from "./WaiterHeader";
 import { WaiterNav } from "./WaiterNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TileGridSkeleton } from "@/components/ui/Skeleton";
@@ -65,16 +64,9 @@ export function TablesGrid() {
 
   return (
     <>
-      <AppHeader
+      <WaiterHeader
         title={name ? `Hola, ${name.split(" ")[0]}` : "Mesas"}
         subtitle={now ? `Turno en curso · ${formatClock(new Date(now))}` : "Turno en curso"}
-        action={
-          <SignOutButton>
-            <HeaderIcon>
-              <UserRound aria-hidden />
-            </HeaderIcon>
-          </SignOutButton>
-        }
       />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         <LiveIndicator live={live} />

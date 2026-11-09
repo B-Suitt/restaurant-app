@@ -7,7 +7,7 @@ import { BellRing, ReceiptText } from "lucide-react";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Modal } from "@/components/ui/Modal";
-import { formatPrice } from "@/lib/format-price";
+import { TotalRow } from "@/components/ui/TotalRow";
 import { loadSessionOrders, sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
 import { tableLabel, useClientSession } from "./ClientSessionProvider";
@@ -102,10 +102,7 @@ export function WaiterCallActions({ layout = "pair" }: { layout?: "pair" | "bill
         <Chip tone="accent">Pidiendo la cuenta</Chip>
         {total !== null && (
           <div className="flex flex-col gap-3">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-lg font-bold">Consumo</p>
-              <p className="text-2xl">{formatPrice(total)}</p>
-            </div>
+            <TotalRow label="Consumo" amount={total} />
             <p className="text-sm text-muted">Sin cobro en la app. Propina no incluida.</p>
           </div>
         )}

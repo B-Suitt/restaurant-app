@@ -5,6 +5,7 @@ import { Utensils } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { Card } from "@/components/ui/Card";
 import { InfoNote } from "@/components/ui/InfoNote";
+import { TotalRow } from "@/components/ui/TotalRow";
 import { formatPrice } from "@/lib/format-price";
 import { includedVat, loadSessionOrders, sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
@@ -95,10 +96,7 @@ export function BillView() {
                 <span>{formatPrice(includedVat(total))}</span>
               </div>
             </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-lg font-bold">Total</p>
-              <p className="text-2xl">{formatPrice(total)}</p>
-            </div>
+            <TotalRow label="Total" amount={total} />
           </Card>
         )}
 

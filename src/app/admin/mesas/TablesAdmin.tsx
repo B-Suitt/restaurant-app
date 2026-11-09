@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight, Plus, QrCode, SearchX } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -19,7 +19,6 @@ import { TABLE_STATUS_DISPLAY, tableStatus, type TableStatus } from "@/lib/table
 import { useLiveData } from "@/lib/use-live-data";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
-import { QrCode, SearchX } from "lucide-react";
 
 const PAGE_SIZE = 8;
 

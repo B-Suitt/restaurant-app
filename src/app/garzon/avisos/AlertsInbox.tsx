@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { BellRing, HandPlatter, ReceiptText, UserRound } from "lucide-react";
-import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
+import { BellRing, CheckCheck, HandPlatter, Inbox, ReceiptText } from "lucide-react";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
-import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
@@ -13,16 +11,16 @@ import { FilterTabs } from "@/components/ui/FilterTabs";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { formatPrice } from "@/lib/format-price";
 import { statusTime, tableLabel } from "@/lib/order-format";
-import { errorMessage } from "@/lib/rpc-errors";
 import { sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
 import { formatAgo, formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
+import { useRowAction } from "@/lib/use-row-action";
+import { WaiterHeader } from "../WaiterHeader";
 import { WaiterNav } from "../WaiterNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardsSkeleton } from "@/components/ui/Skeleton";
-import { CheckCheck, Inbox } from "lucide-react";
 
 /** Ventana de avisos ya atendidos que se muestran (un turno). */
 const SHIFT_HOURS = 12;
@@ -111,17 +109,10 @@ export function AlertsInbox() {
 
   return (
     <>
-      <AppHeader
+      <WaiterHeader
         title="Bandeja de avisos"
         subtitle={
           alerts ? `${pendingCount} ${pendingCount === 1 ? "aviso nuevo" : "avisos nuevos"} · Tu turno` : undefined
-        }
-        action={
-          <SignOutButton>
-            <HeaderIcon>
-              <UserRound aria-hidden />
-            </HeaderIcon>
-          </SignOutButton>
         }
       />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
@@ -166,18 +157,10 @@ const ALERT_DISPLAY: Record<Alert["kind"], { title: string; icon: ReactNode }> =
 };
 
 function AlertCard({ alert, now, onChange }: { alert: Alert; now: number; onChange: () => void }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, run } = useRowAction(onChange);
   const { title, icon } = ALERT_DISPLAY[alert.kind];
   const ago = formatAgo(now - new Date(alert.at).getTime());
-
-  async function attend() {
-    setBusy(true);
-    const { error: rpcError } = await createClient().rpc("attend_call", { p_call_id: alert.id });
-    setBusy(false);
-    setError(rpcError ? errorMessage(rpcError) : null);
-    onChange();
-  }
+  const attend = () => run(() => createClient().rpc("attend_call", { p_call_id: alert.id }));
 
   return (
     <Card className="flex flex-col gap-3">

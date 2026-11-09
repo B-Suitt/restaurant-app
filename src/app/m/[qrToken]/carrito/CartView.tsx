@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { Send, Utensils } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { Button, buttonClasses } from "@/components/ui/Button";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
+import { extraLabel } from "@/lib/order-format";
 import { createClient } from "@/lib/supabase/client";
 import { ClientNav } from "../ClientNav";
 import { WaiterCallActions } from "../WaiterCallActions";
@@ -88,16 +90,12 @@ export function CartView() {
             <p className="text-sm text-muted">Precios en pesos chilenos · IVA incluido.</p>
 
             {unavailable.length > 0 && (
-              <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
+              <ErrorNote>
                 {unavailable.map((l) => dishById.get(l.dishId)?.name ?? "Un plato").join(", ")}{" "}
                 {unavailable.length === 1 ? "se agotó" : "se agotaron"}. Quítalo del carrito para enviar tu pedido.
-              </p>
+              </ErrorNote>
             )}
-            {error && unavailable.length === 0 && (
-              <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                {error}
-              </p>
-            )}
+            <ErrorNote>{unavailable.length === 0 && error}</ErrorNote>
 
             <Button onClick={sendOrder} loading={sending} disabled={unavailable.length > 0}>
               {!sending && <Send className="size-5" aria-hidden />} Enviar pedido
@@ -135,7 +133,7 @@ function CartRow({
 }) {
   const extras = dish?.dish_extras.filter((e) => line.extraIds.includes(e.id)) ?? [];
   const details = [
-    ...extras.map((e) => (e.price > 0 ? `${e.name} +${formatPrice(e.price)}` : e.name)),
+    ...extras.map((e) => extraLabel(e.name, e.price)),
     line.note,
     line.quantity > 1 && dish ? `${formatPrice(dish.price)} c/u` : "",
   ].filter(Boolean);

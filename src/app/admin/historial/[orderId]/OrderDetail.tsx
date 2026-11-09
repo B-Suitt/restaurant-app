@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Card } from "@/components/ui/Card";
 import { InfoNote } from "@/components/ui/InfoNote";
+import { LinkNotice } from "@/components/ui/LinkNotice";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TotalRow } from "@/components/ui/TotalRow";
 import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
 import { extrasText, tableLabel } from "@/lib/order-format";
@@ -124,12 +125,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
         />
 
         {error || data === null ? (
-          <Card className="py-10 text-center text-base text-muted">
-            No encontramos ese pedido.{" "}
-            <Link href="/admin/historial" className="text-primary hover:underline">
-              Volver al historial
-            </Link>
-          </Card>
+          <LinkNotice text="No encontramos ese pedido." href="/admin/historial" linkLabel="Volver al historial" />
         ) : !data || !order ? (
           <div className="flex flex-col gap-6">
             <StatsSkeleton count={3} />
@@ -233,10 +229,7 @@ function Detail({ data }: { data: Loaded }) {
             </TableBody>
           </Table>
           <Card className="flex flex-col gap-3 p-5">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-lg font-bold">Total</p>
-              <p className="text-2xl">{formatPrice(total)}</p>
-            </div>
+            <TotalRow label="Total" amount={total} />
             <p className="text-sm text-muted">IVA incluido · Propina no incluida</p>
           </Card>
           <InfoNote plain title="Registro de consumo">

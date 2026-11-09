@@ -2,24 +2,23 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Star } from "lucide-react";
+import { Plus, SearchX, Star, UtensilsCrossed } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { DishPhoto } from "@/components/ui/DishPhoto";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { FilterTabs } from "@/components/ui/FilterTabs";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { formatPrice } from "@/lib/format-price";
+import { extraLabel } from "@/lib/order-format";
 import { dbErrorMessage } from "@/lib/rpc-errors";
+import { matchesText } from "@/lib/search";
 import { createClient } from "@/lib/supabase/client";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
-import { SearchX, UtensilsCrossed } from "lucide-react";
-
-/** Texto sin mayúsculas ni tildes, para buscar "limon" y encontrar "Limón". */
-const normalize = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 async function loadDishes() {
   const supabase = createClient();
@@ -60,7 +59,7 @@ export function MenuAdmin() {
 
   const categoryById = new Map(data?.categories.map((c) => [c.id, c]));
   const matches = (d: Dish) =>
-    (!query.trim() || normalize(`${d.name} ${d.description ?? ""}`).includes(normalize(query.trim()))) &&
+    matchesText(`${d.name} ${d.description ?? ""}`, query) &&
     (!availability || d.available === (availability === "available"));
   const visible = data?.dishes.filter((d) => matches(d) && (!categoryId || d.category_id === categoryId)) ?? [];
   const countIn = (id: string | null) => data?.dishes.filter((d) => matches(d) && (!id || d.category_id === id)).length ?? 0;
@@ -116,11 +115,7 @@ export function MenuAdmin() {
           />
         )}
 
-        {error && (
-          <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-            {error}
-          </p>
-        )}
+        <ErrorNote>{error}</ErrorNote>
 
         {!data ? (
           <TableSkeleton cols={6} label="Cargando carta…" />
@@ -164,7 +159,7 @@ export function MenuAdmin() {
                     </TableCell>
                     <TableCell className="text-muted">
                       {dish.dish_extras.some((e) => e.active)
-                        ? dish.dish_extras.filter((e) => e.active).map((e) => `${e.name} +${formatPrice(e.price)}`).join(" · ")
+                        ? dish.dish_extras.filter((e) => e.active).map((e) => extraLabel(e.name, e.price)).join(" · ")
                         : "Sin adicionales"}
                     </TableCell>
                     <TableCell>

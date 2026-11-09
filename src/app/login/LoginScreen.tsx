@@ -7,7 +7,7 @@ import { BrandMark } from "@/components/layout/BrandMark";
 import { RESTAURANT_NAME } from "@/lib/restaurant";
 import { LoginForm } from "./LoginForm";
 
-export type LoginVariant = "team" | "admin";
+type LoginVariant = "team" | "admin";
 
 const COPY = {
   team: {

@@ -21,6 +21,11 @@ export function errorMessage(error: { message?: string } | null | undefined): st
   return "Algo salió mal. Inténtalo de nuevo.";
 }
 
+/** Hubo un problema al cargar. Un id mal formado en la URL (22P02) no lo es: ese registro simplemente no existe. */
+export function isLoadFailure(error: { code?: string } | null | undefined) {
+  return !!error && error.code !== "22P02";
+}
+
 /** Mensaje para un error de escritura directa en tablas (admin), según el código de Postgres. */
 export function dbErrorMessage(
   error: { message?: string; code?: string } | null | undefined,

@@ -1,16 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Check } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
-import { Button, buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input, Select } from "@/components/ui/Field";
+import { FormActions } from "@/components/ui/FormActions";
 import { InfoNote } from "@/components/ui/InfoNote";
+import { LinkNotice } from "@/components/ui/LinkNotice";
 import { ROLE_LABEL, type StaffRole } from "@/lib/roles";
+import { isLoadFailure } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
 import { createUser, getUserDates, updateUser } from "./actions";
@@ -53,6 +55,7 @@ export function UserForm({ userId }: { userId: string | null }) {
   const isNew = userId === null;
   const [loaded, setLoaded] = useState(isNew);
   const [notFound, setNotFound] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [isMe, setIsMe] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -69,8 +72,9 @@ export function UserForm({ userId }: { userId: string | null }) {
     Promise.all([
       supabase.from("profiles").select("name, email, role, active").eq("id", userId).maybeSingle(),
       supabase.auth.getUser(),
-      getUserDates(userId),
+      getUserDates(userId).catch(() => null), // informativo: si falla, igual se puede editar
     ]).then(([profile, auth, accountDates]) => {
+      if (isLoadFailure(profile.error)) return setLoadFailed(true);
       if (!profile.data) return setNotFound(true);
       setName(profile.data.name);
       setEmail(profile.data.email);
@@ -79,7 +83,7 @@ export function UserForm({ userId }: { userId: string | null }) {
       setIsMe(auth.data.user?.id === userId);
       setDates(accountDates);
       setLoaded(true);
-    });
+    }).catch(() => setLoadFailed(true));
   }, [userId]);
 
   async function save(event: FormEvent) {
@@ -104,13 +108,10 @@ export function UserForm({ userId }: { userId: string | null }) {
           subtitle={`Usuarios y roles / ${isNew ? "Nuevo usuario" : name}`}
         />
 
-        {notFound ? (
-          <Card className="py-10 text-center text-base text-muted">
-            No encontramos ese usuario.{" "}
-            <Link href="/admin/usuarios" className="text-primary hover:underline">
-              Volver al equipo
-            </Link>
-          </Card>
+        {loadFailed ? (
+          <ErrorNote>No pudimos cargar el usuario. Revisa tu conexión y recarga la página.</ErrorNote>
+        ) : notFound ? (
+          <LinkNotice text="No encontramos ese usuario." href="/admin/usuarios" linkLabel="Volver al equipo" />
         ) : !loaded ? (
           <FormSkeleton label="Cargando usuario…" />
         ) : (
@@ -160,19 +161,8 @@ export function UserForm({ userId }: { userId: string | null }) {
                 )}
               </Card>
 
-              {error && (
-                <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                  {error}
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <Link href="/admin/usuarios" className={buttonClasses({ variant: "secondary" })}>
-                  Cancelar
-                </Link>
-                <Button type="submit" loading={saving}>
-                  {isNew ? "Crear usuario" : "Guardar cambios"}
-                </Button>
-              </div>
+              <ErrorNote>{error}</ErrorNote>
+              <FormActions cancelHref="/admin/usuarios" submitLabel={isNew ? "Crear usuario" : "Guardar cambios"} saving={saving} />
             </form>
 
             <div className="flex flex-col gap-6">

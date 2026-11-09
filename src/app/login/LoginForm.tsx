@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input } from "@/components/ui/Field";
 import { createClient } from "@/lib/supabase/client";
 import { ROLE_HOME, requiredRole, type StaffRole } from "@/lib/roles";
@@ -71,11 +72,7 @@ export function LoginForm({ footnote }: { footnote: string }) {
         )}
       </div>
 
-      {error && (
-        <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-          {error}
-        </p>
-      )}
+      <ErrorNote>{error}</ErrorNote>
 
       <Button type="submit" loading={loading}>
         Iniciar sesión

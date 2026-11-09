@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { Download, Printer, RefreshCw } from "lucide-react";
@@ -8,6 +7,7 @@ import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { BrandMark } from "@/components/layout/BrandMark";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { LinkNotice } from "@/components/ui/LinkNotice";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { tableLabel } from "@/lib/order-format";
@@ -100,12 +100,7 @@ export function TableQr({ tableId }: { tableId: string }) {
         </div>
 
         {notFound ? (
-          <Card className="py-10 text-center text-base text-muted">
-            No encontramos esa mesa.{" "}
-            <Link href="/admin/mesas" className="text-primary hover:underline">
-              Volver a las mesas
-            </Link>
-          </Card>
+          <LinkNotice text="No encontramos esa mesa." href="/admin/mesas" linkLabel="Volver a las mesas" />
         ) : !table ? (
           <FormSkeleton label="Cargando código…" />
         ) : (

@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
-import { Button, buttonClasses } from "@/components/ui/Button";
+import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input, Select } from "@/components/ui/Field";
+import { FormActions } from "@/components/ui/FormActions";
 import { InfoNote } from "@/components/ui/InfoNote";
+import { LinkNotice } from "@/components/ui/LinkNotice";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { tableLabel } from "@/lib/order-format";
 import { dbErrorMessage } from "@/lib/rpc-errors";
@@ -101,12 +104,7 @@ export function TableForm({ tableId }: { tableId: string | null }) {
         <AdminPageTitle title={title} subtitle={isNew ? "Mesas y QR / Nueva mesa" : `Mesas y QR / ${label} / Editar`} />
 
         {notFound ? (
-          <Card className="py-10 text-center text-base text-muted">
-            No encontramos esa mesa.{" "}
-            <Link href="/admin/mesas" className="text-primary hover:underline">
-              Volver a las mesas
-            </Link>
-          </Card>
+          <LinkNotice text="No encontramos esa mesa." href="/admin/mesas" linkLabel="Volver a las mesas" />
         ) : !loaded ? (
           <FormSkeleton label="Cargando mesa…" />
         ) : (
@@ -156,19 +154,8 @@ export function TableForm({ tableId }: { tableId: string | null }) {
                 </p>
               </Card>
 
-              {error && (
-                <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                  {error}
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <Link href="/admin/mesas" className={buttonClasses({ variant: "secondary" })}>
-                  Cancelar
-                </Link>
-                <Button type="submit" loading={saving}>
-                  {isNew ? "Crear mesa" : "Guardar cambios"}
-                </Button>
-              </div>
+              <ErrorNote>{error}</ErrorNote>
+              <FormActions cancelHref="/admin/mesas" submitLabel={isNew ? "Crear mesa" : "Guardar cambios"} saving={saving} />
             </form>
 
             <div className="flex flex-col gap-6">

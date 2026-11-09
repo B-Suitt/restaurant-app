@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Plus, Utensils } from "lucide-react";
+import { Plus, Utensils, UtensilsCrossed } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -14,7 +14,6 @@ import { ClientNav } from "../ClientNav";
 import { WaiterCallActions } from "../WaiterCallActions";
 import { linePrice, tableLabel, useClientSession, type MenuDish } from "../ClientSessionProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { UtensilsCrossed } from "lucide-react";
 
 // Frame "Cliente · Menú"
 export function MenuView() {

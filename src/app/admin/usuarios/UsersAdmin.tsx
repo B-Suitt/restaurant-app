@@ -2,21 +2,22 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, SearchX } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { buttonClasses } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { StatCard } from "@/components/ui/StatCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { ROLE_LABEL, type StaffRole } from "@/lib/roles";
 import { dbErrorMessage } from "@/lib/rpc-errors";
+import { matchesText } from "@/lib/search";
 import { createClient } from "@/lib/supabase/client";
 import { setUserActive } from "./actions";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
-import { SearchX } from "lucide-react";
 
 type Profile = { id: string; name: string; email: string; role: StaffRole; active: boolean };
 
@@ -25,8 +26,6 @@ const ROLE_DETAIL: Record<StaffRole, { title: string; text: string }> = {
   kitchen: { title: "Cocina", text: "Preparación y salida de platos" },
   admin: { title: "Administración", text: "Configuración y operación" },
 };
-
-const normalize = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 // Frame "Administrador · Usuarios y roles"
 export function UsersAdmin() {
@@ -53,7 +52,7 @@ export function UsersAdmin() {
   const visible =
     users?.filter(
       (u) =>
-        (!query.trim() || normalize(`${u.name} ${u.email}`).includes(normalize(query.trim()))) &&
+        matchesText(`${u.name} ${u.email}`, query) &&
         (!role || u.role === role) &&
         (!status || u.active === (status === "active")),
     ) ?? [];
@@ -111,11 +110,7 @@ export function UsersAdmin() {
           </Field>
         </div>
 
-        {error && (
-          <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-            {error}
-          </p>
-        )}
+        <ErrorNote>{error}</ErrorNote>
 
         {!users ? (
           <TableSkeleton label="Cargando equipo…" />

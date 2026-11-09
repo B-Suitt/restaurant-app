@@ -3,19 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BellRing, DoorOpen, Plus, ReceiptText, UserRound } from "lucide-react";
-import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
+import { BellRing, ClipboardList, DoorOpen, Plus, ReceiptText, WifiOff } from "lucide-react";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
-import { SignOutButton } from "@/components/layout/SignOutButton";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { Modal } from "@/components/ui/Modal";
-import { StatusChip } from "@/components/ui/StatusChip";
-import { formatPrice } from "@/lib/format-price";
-import { extrasText, tableLabel } from "@/lib/order-format";
-import type { OrderItemStatus } from "@/lib/order-status";
+import { OrderItemRow } from "@/components/ui/OrderItemRow";
+import { TotalRow } from "@/components/ui/TotalRow";
+import { tableLabel } from "@/lib/order-format";
 import { errorMessage } from "@/lib/rpc-errors";
 import { sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
@@ -24,10 +21,11 @@ import { formatAgo, formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
 import { useProfileName } from "@/lib/use-profile";
+import { useRowAction } from "@/lib/use-row-action";
+import { WaiterHeader } from "../../WaiterHeader";
 import { WaiterNav } from "../../WaiterNav";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardsSkeleton } from "@/components/ui/Skeleton";
-import { ClipboardList, WifiOff } from "lucide-react";
 
 async function loadTable(tableId: string) {
   const supabase = createClient();
@@ -56,7 +54,6 @@ async function loadTable(tableId: string) {
 }
 
 type Session = NonNullable<Awaited<ReturnType<typeof loadTable>>["session"]>;
-type Item = Session["orders"][number]["order_items"][number];
 
 // Frame "Garzón · Detalle de mesa"
 export function TableDetail({ tableId }: { tableId: string }) {
@@ -79,18 +76,7 @@ export function TableDetail({ tableId }: { tableId: string }) {
 
   return (
     <>
-      <AppHeader
-        title={label}
-        subtitle={[name, table?.zone].filter(Boolean).join(" · ")}
-        backHref="/garzon"
-        action={
-          <SignOutButton>
-            <HeaderIcon>
-              <UserRound aria-hidden />
-            </HeaderIcon>
-          </SignOutButton>
-        }
-      />
+      <WaiterHeader title={label} subtitle={[name, table?.zone].filter(Boolean).join(" · ")} backHref="/garzon" />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         {data === null ? (
           loadError ? (
@@ -134,7 +120,7 @@ export function TableDetail({ tableId }: { tableId: string }) {
                 <Card className="flex flex-col gap-2 text-center">
                   <p className="text-lg font-bold">Mesa libre</p>
                   <p className="text-sm text-muted">
-                    Se abre sola cuando un cliente escanea el QR. También puedes tomar el pedido tú: la mesa se abre al enviarlo.
+                    Se ocupa con el primer pedido o llamado del cliente. También puedes tomar el pedido tú.
                   </p>
                 </Card>
                 {table.active && (
@@ -162,17 +148,20 @@ export function TableDetail({ tableId }: { tableId: string }) {
                       </div>
                       <ul className="flex flex-col gap-4">
                         {order.order_items.map((item) => (
-                          <ItemRow key={item.id} item={item} onChange={reload} />
+                          <OrderItemRow
+                            key={item.id}
+                            item={item}
+                            showUnitPrice
+                            confirmText={`¿Cancelar ${item.quantity} × ${item.dishes.name}?`}
+                            onChange={reload}
+                          />
                         ))}
                       </ul>
                     </Card>
                   ))
                 )}
 
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-lg font-bold">Consumo actual</p>
-                  <p className="text-2xl">{formatPrice(total)}</p>
-                </div>
+                <TotalRow label="Consumo actual" amount={total} />
                 <Link href={`/garzon/mesas/${tableId}/agregar`} className={buttonClasses()}>
                   <Plus className="size-5" aria-hidden /> Agregar pedido
                 </Link>
@@ -210,17 +199,9 @@ function PendingCall({
   now: number;
   onChange: () => void;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, run } = useRowAction(onChange);
   const isBill = call.type === "bill";
-
-  async function attend() {
-    setBusy(true);
-    const { error: rpcError } = await createClient().rpc("attend_call", { p_call_id: call.id });
-    setBusy(false);
-    setError(rpcError ? errorMessage(rpcError) : null);
-    onChange();
-  }
+  const attend = () => run(() => createClient().rpc("attend_call", { p_call_id: call.id }));
 
   return (
     <Card tone="highlight" className="flex flex-col gap-3">
@@ -239,49 +220,6 @@ function PendingCall({
         {isBill ? "Cuenta entregada" : "Atender llamado"}
       </Button>
     </Card>
-  );
-}
-
-function ItemRow({ item, onChange }: { item: Item; onChange: () => void }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const details = [
-    ...extrasText(item.order_item_extras),
-    item.note,
-    item.quantity > 1 ? `${formatPrice(item.unit_price)} c/u` : "",
-  ].filter(Boolean);
-
-  async function cancel() {
-    if (!window.confirm(`¿Cancelar ${item.quantity} × ${item.dishes.name}?`)) return;
-    setBusy(true);
-    const { error: rpcError } = await createClient().rpc("set_item_status", { p_item_id: item.id, p_status: "cancelado" });
-    setBusy(false);
-    setError(rpcError ? errorMessage(rpcError) : null);
-    onChange();
-  }
-
-  return (
-    <li className="flex flex-col gap-2.25 border-b border-border pb-4">
-      <p className={item.status === "cancelado" ? "text-base text-muted line-through" : "text-base"}>
-        {item.quantity} × {item.dishes.name}
-      </p>
-      {details.length > 0 && <p className="text-sm text-muted">{details.join(" · ")}</p>}
-      <div className="flex items-center justify-between gap-3">
-        <StatusChip status={item.status as OrderItemStatus} />
-        {/* Solo se puede cancelar mientras el plato está en Recibido. */}
-        {item.status === "recibido" && (
-          <button
-            type="button"
-            onClick={cancel}
-            disabled={busy}
-            className="cursor-pointer text-sm text-primary hover:underline disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-        )}
-      </div>
-      {error && <p className="text-sm text-primary">{error}</p>}
-    </li>
   );
 }
 
@@ -328,10 +266,7 @@ function CloseTableModal({
       title={`¿Cerrar la ${label.toLowerCase()}?`}
       description="Cierra la estadía solo cuando hayas finalizado la atención y gestionado el pago fuera de la app."
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-lg font-bold">Consumo registrado</p>
-        <p className="text-2xl">{formatPrice(total)}</p>
-      </div>
+      <TotalRow label="Consumo registrado" amount={total} />
       {inProgress > 0 && (
         <p role="alert" className="rounded-sm bg-warning-bg p-3 text-md text-warning-fg">
           Quedan {inProgress} {inProgress === 1 ? "plato" : "platos"} sin entregar.

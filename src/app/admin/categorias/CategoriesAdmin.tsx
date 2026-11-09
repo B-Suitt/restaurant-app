@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { ArrowDown, ArrowUp, GripVertical, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Layers, Plus } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
@@ -15,7 +16,6 @@ import { dbErrorMessage } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSkeleton } from "@/components/ui/Skeleton";
-import { Layers } from "lucide-react";
 
 type Category = { id: string; name: string; description: string | null; active: boolean; dishCount: number };
 
@@ -243,11 +243,7 @@ export function CategoriesAdmin() {
               <InfoNote plain title="El orden también es parte del servicio">
                 Arrastra las categorías o usa las flechas para organizar la carta. Los platos conservan su categoría al reordenar.
               </InfoNote>
-              {error && !selected && (
-                <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                  {error}
-                </p>
-              )}
+              <ErrorNote>{!selected && error}</ErrorNote>
               <div className="flex items-center gap-3">
                 <Button onClick={persistOrder} loading={busy === "order"} disabled={!dirty}>
                   Guardar orden
@@ -284,11 +280,7 @@ export function CategoriesAdmin() {
                       </Select>
                     </Field>
                     <ToggleRow label="Visible en la carta" checked={active} onChange={setActive} onLabel="Visible" offLabel="Oculta" />
-                    {error && (
-                      <p role="alert" className="rounded-sm bg-danger-bg p-3 text-md text-danger-fg">
-                        {error}
-                      </p>
-                    )}
+                    <ErrorNote>{error}</ErrorNote>
                     <Button type="submit" loading={busy === "form"}>
                       Guardar categoría
                     </Button>

@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { StaffRole } from "@/lib/roles";
 
-export type UserInput = {
+type UserInput = {
   name: string;
   email: string;
   role: StaffRole;
@@ -12,7 +12,7 @@ export type UserInput = {
   password: string; // vacío al editar = conservar la actual
 };
 
-export type ActionResult = { ok: true; id: string } | { ok: false; error: string };
+type ActionResult = { ok: true; id: string } | { ok: false; error: string };
 
 const ROLES: StaffRole[] = ["admin", "waiter", "kitchen"];
 const MIN_PASSWORD = 8;
