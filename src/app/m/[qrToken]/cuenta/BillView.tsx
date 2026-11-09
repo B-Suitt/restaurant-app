@@ -116,7 +116,7 @@ export function BillView() {
           No se realizan pagos en la app. Paga directamente con tu garzón; la propina es voluntaria y no está incluida.
         </InfoNote>
         <WaiterCallActions layout="bill-first" />
-        <p className="text-center text-xs text-muted">Gracias por compartir tu mesa con nosotros.</p>
+        <p className="text-center text-sm text-muted">Gracias por compartir tu mesa con nosotros.</p>
       </main>
       <ClientNav active="cuenta" />
     </>

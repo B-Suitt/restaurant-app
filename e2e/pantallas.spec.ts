@@ -28,14 +28,20 @@ test("un pedido recorre todas las pantallas", async ({ stage }) => {
   const [{ id: sessionId }] = await stage.openSessions();
   await expect(clientBody).toContainText(/Mesa|carta|menú/i);
   await client.goto(`/m/${table.qr_token}/plato/${dishA.id}`);
+  await expect(client.getByRole("button", { name: /Agregar al carrito/ })).toBeInViewport();
   await client.getByRole("button", { name: /Agregar al carrito/ }).click();
   await client.waitForTimeout(800);
   await client.goto(`/m/${table.qr_token}/carrito`);
   await expect(clientBody).toContainText(dishA.name);
   await expect(clientBody).toContainText(clp(dishA.price));
+  await expect(clientBody).toContainText("Del carrito a la cocina");
+  await expect(clientBody).not.toContainText("directo a cocina. Tu garzón también");
+  const removeBox = await client.getByRole("button", { name: "Eliminar" }).boundingBox();
+  expect(removeBox?.height).toBeGreaterThanOrEqual(44);
   await client.getByRole("button", { name: /Enviar pedido/ }).click();
   await expect(clientBody).toContainText(/Pedido #\d+/);
   await expect(clientBody).toContainText("Esperando al garzón");
+  await expect(client.locator("li", { hasText: dishA.name })).toContainText("Por confirmar");
   await client.waitForTimeout(1500); // la suscripción en vivo tarda un momento en activarse
   const first = must(await service.from("order_items").select("id, orders!inner(session_id)").eq("orders.session_id", sessionId).single());
 
@@ -53,7 +59,14 @@ test("un pedido recorre todas las pantallas", async ({ stage }) => {
   const items = must(await service.from("order_items").select("id, dish_id, orders!inner(session_id)").eq("orders.session_id", sessionId));
   const itemOf = (dish: { id: string }) => items.find((i) => i.dish_id === dish.id)!.id;
   await expect(clientBody).toContainText(dishB.name);
-  await client.locator("li", { hasText: dishA.name }).getByRole("button", { name: "Cancelar" }).click();
+  await expect(client.locator("li", { hasText: dishB.name })).toContainText(`${clp(dishB.price)} c/u`);
+  const cancelButton = client.locator("li", { hasText: dishA.name }).getByRole("button", { name: "Cancelar", exact: true });
+  expect((await cancelButton.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  await cancelButton.click();
+  await client.getByRole("button", { name: "Mantener plato" }).click();
+  expect(await itemStatus(first.id)()).toBe("recibido");
+  await cancelButton.click();
+  await client.getByRole("button", { name: "Sí, cancelar plato" }).click();
   await expect.poll(itemStatus(first.id)).toBe("cancelado");
   await expect(clientBody).toContainText("Pedido cancelado");
 
@@ -75,13 +88,15 @@ test("un pedido recorre todas las pantallas", async ({ stage }) => {
   await waiterPage.getByRole("button", { name: "Confirmar mesa" }).click();
   await expect(board).toContainText(tableLabel);
   await expect(clientBody).not.toContainText("Esperando al garzón");
+  await expect(client.locator("li", { hasText: dishB.name })).toContainText("Recibido");
   await expect(avisos.locator("body")).not.toContainText("Mesa por confirmar");
 
   // El garzón ve el detalle y cancela un plato.
   await expect(waiterBody).toContainText(dishB.name);
   await expect(waiterBody).toContainText(`${clp(dishB.price)} c/u`);
   await expect(waiterBody).toContainText("nota de prueba");
-  await waiterPage.locator("li", { hasText: dishC.name }).getByRole("button", { name: "Cancelar" }).click();
+  await waiterPage.locator("li", { hasText: dishC.name }).getByRole("button", { name: "Cancelar", exact: true }).click();
+  await waiterPage.getByRole("button", { name: "Sí, cancelar plato" }).click();
   await expect.poll(itemStatus(itemOf(dishC))).toBe("cancelado");
   const consumption = dishB.price * 2;
   await expect(waiterBody).toContainText(new RegExp(`Consumo actual.*\\${clp(consumption)}`));

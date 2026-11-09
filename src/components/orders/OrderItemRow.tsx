@@ -1,5 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { CircleX } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
+import { Modal } from "@/components/ui/Modal";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { formatPrice } from "@/lib/format-price";
 import { extrasText } from "@/lib/order-format";
@@ -13,13 +18,16 @@ type OrderItemRowProps = {
   confirmText: string;
   /** Muestra "$X c/u" cuando hay más de una unidad. */
   showUnitPrice?: boolean;
+  /** La mesa aún no se confirma: el plato todavía no llega a cocina. */
+  waiting?: boolean;
   toMessage?: (error: { message?: string }) => string;
   onChange: () => void;
 };
 
 /** Plato de un pedido con su estado; se puede cancelar mientras está en Recibido. */
-export function OrderItemRow({ item, confirmText, showUnitPrice = false, toMessage, onChange }: OrderItemRowProps) {
+export function OrderItemRow({ item, confirmText, showUnitPrice = false, waiting = false, toMessage, onChange }: OrderItemRowProps) {
   const { busy, error, run } = useRowAction(onChange, toMessage);
+  const [confirming, setConfirming] = useState(false);
   const details = [
     ...extrasText(item.order_item_extras),
     item.note,
@@ -27,7 +35,7 @@ export function OrderItemRow({ item, confirmText, showUnitPrice = false, toMessa
   ].filter(Boolean);
 
   function cancel() {
-    if (!window.confirm(confirmText)) return;
+    setConfirming(false);
     run(() => createClient().rpc("set_item_status", { p_item_id: item.id, p_status: "cancelado" }));
   }
 
@@ -38,19 +46,33 @@ export function OrderItemRow({ item, confirmText, showUnitPrice = false, toMessa
       </p>
       {details.length > 0 && <p className="text-sm text-muted">{details.join(" · ")}</p>}
       <div className="flex items-center justify-between gap-3">
-        <StatusChip status={item.status as OrderItemStatus} />
+        {waiting && item.status === "recibido" ? <Chip tone="neutral">Por confirmar</Chip> : <StatusChip status={item.status as OrderItemStatus} />}
         {item.status === "recibido" && (
           <button
             type="button"
-            onClick={cancel}
+            onClick={() => setConfirming(true)}
             disabled={busy}
-            className="cursor-pointer text-sm text-primary hover:underline disabled:opacity-50"
+            className="-mr-2 flex min-h-11 cursor-pointer items-center px-2 text-sm text-primary hover:underline disabled:opacity-50"
           >
             Cancelar
           </button>
         )}
       </div>
       {error && <p className="text-sm text-primary">{error}</p>}
+      {confirming && (
+        <Modal
+          open
+          onClose={() => setConfirming(false)}
+          icon={<CircleX aria-hidden />}
+          title={confirmText}
+          description="El plato saldrá del pedido y no se preparará."
+        >
+          <Button onClick={cancel}>Sí, cancelar plato</Button>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>
+            Mantener plato
+          </Button>
+        </Modal>
+      )}
     </li>
   );
 }

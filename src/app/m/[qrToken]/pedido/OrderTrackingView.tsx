@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ReceiptText, Utensils } from "lucide-react";
+import { Hourglass, ReceiptText, Utensils } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
 import { OrderItemRow } from "@/components/orders/OrderItemRow";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { InfoNote } from "@/components/ui/InfoNote";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { formatPrice } from "@/lib/format-price";
 import { ORDER_ITEM_STATUSES } from "@/lib/order-status";
@@ -56,9 +55,13 @@ export function OrderTrackingView() {
         <p className="text-base text-muted">Aquí verás el estado de cada plato de la mesa.</p>
 
         {data && !data.confirmed && data.orders.length > 0 && (
-          <InfoNote title="Esperando al garzón">
-            Tu garzón confirmará la mesa y tu pedido pasará a cocina. Puedes llamarlo si lo necesitas.
-          </InfoNote>
+          <Card tone="highlight" role="status" className="flex items-start gap-3">
+            <Hourglass className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-bold">Esperando al garzón</p>
+              <p className="text-sm text-muted">Tu pedido pasará a cocina cuando tu garzón confirme la mesa.</p>
+            </div>
+          </Card>
         )}
 
         {orders === null ? (
@@ -76,7 +79,9 @@ export function OrderTrackingView() {
             Cuando envíes tu pedido, aquí verás cómo avanza cada plato.
           </EmptyState>
         ) : (
-          orders.map((order) => <OrderCard key={order.id} order={order} tableNumber={tableNumber} onChange={reload} />)
+          orders.map((order) => (
+            <OrderCard key={order.id} order={order} tableNumber={tableNumber} waiting={!data?.confirmed} onChange={reload} />
+          ))
         )}
 
         <div className="flex flex-col gap-2.25">
@@ -92,14 +97,24 @@ export function OrderTrackingView() {
           Agregar algo más
         </Link>
         <WaiterCallActions />
-        <p className="text-center text-xs text-muted">El pago se realiza directamente en el restaurante.</p>
+        <p className="text-center text-sm text-muted">El pago se realiza directamente en el restaurante.</p>
       </main>
       <ClientNav active="pedido" />
     </>
   );
 }
 
-function OrderCard({ order, tableNumber, onChange }: { order: SessionOrder; tableNumber: number; onChange: () => void }) {
+function OrderCard({
+  order,
+  tableNumber,
+  waiting,
+  onChange,
+}: {
+  order: SessionOrder;
+  tableNumber: number;
+  waiting: boolean;
+  onChange: () => void;
+}) {
   const { rpcError } = useClientSession();
   const active = order.order_items.filter((i) => i.status !== "cancelado");
   const count = active.reduce((sum, i) => sum + i.quantity, 0);
@@ -121,6 +136,8 @@ function OrderCard({ order, tableNumber, onChange }: { order: SessionOrder; tabl
             key={item.id}
             item={item}
             confirmText={`¿Cancelar ${item.dishes.name}?`}
+            showUnitPrice
+            waiting={waiting}
             toMessage={rpcError}
             onChange={onChange}
           />

@@ -70,6 +70,34 @@ test("un fallo al cargar no se confunde con un registro inexistente", async ({ s
   await expect(body).toContainText("No encontramos ese pedido");
 });
 
+test("el garzón confirma la mesa directo desde Avisos", async ({ stage }) => {
+  const guest = await guestClient(stage.table.qr_token);
+  must(await guest.supabase.rpc("place_order", { p_session_id: guest.sessionId, p_items: [{ dish_id: await firstDish(), quantity: 1, note: "", extra_ids: [] }] }));
+
+  const page = await stage.newPage("garzón");
+  await signIn(page, "garzon", "/garzon/avisos");
+  await expect(page.locator("body")).toContainText("Mesa por confirmar");
+  await page.getByRole("button", { name: "Confirmar mesa" }).click();
+  await expect.poll(async () => must(await service.from("table_sessions").select("confirmed_at").eq("id", guest.sessionId).single()).confirmed_at).not.toBeNull();
+  await expect(page.locator("body")).not.toContainText("Mesa por confirmar");
+});
+
+test("cada rol ve su propia pantalla de acceso", async ({ stage }) => {
+  const phone = await stage.newPage("garzón");
+  await phone.goto("/garzon");
+  await expect(phone.getByRole("heading", { name: "Un gran servicio empieza contigo." })).toBeVisible();
+
+  const kitchen = await stage.newPage("cocina", DESKTOP);
+  await kitchen.goto("/cocina");
+  await expect(kitchen.locator("main")).toContainText("Ingresa con la cuenta asignada a tu estación.");
+  await expect(kitchen.locator("main")).toContainText("¿No puedes ingresar? Contacta al administrador.");
+
+  const admin = await stage.newPage("admin", DESKTOP);
+  await admin.goto("/admin");
+  await expect(admin.getByRole("heading", { name: "Hola de nuevo." })).toBeVisible();
+  expect((await admin.locator("aside").boundingBox())?.width).toBe(660);
+});
+
 test("el producto se llama Al Tiro", async ({ stage }) => {
   const page = await stage.newPage("visitante");
   await page.goto("/");

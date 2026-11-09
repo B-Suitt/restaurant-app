@@ -204,6 +204,7 @@ function AlertCard({ alert, now, onChange }: { alert: Alert; now: number; onChan
   const { title, icon } = ALERT_DISPLAY[alert.kind];
   const ago = formatAgo(now - new Date(alert.at).getTime());
   const attend = () => run(() => createClient().rpc("attend_call", { p_call_id: alert.id }));
+  const confirm = () => run(() => createClient().rpc("confirm_session", { p_session_id: alert.id }));
 
   return (
     <Card className="flex flex-col gap-3">
@@ -232,7 +233,7 @@ function AlertCard({ alert, now, onChange }: { alert: Alert; now: number; onChan
         ) : (
           <Chip tone="accent">Pidiendo la cuenta</Chip>
         )}
-        <p className="text-xs text-muted">
+        <p className="text-sm text-muted">
           {ago.charAt(0).toUpperCase() + ago.slice(1)} · {formatClock(alert.at)}
         </p>
       </div>
@@ -245,7 +246,16 @@ function AlertCard({ alert, now, onChange }: { alert: Alert; now: number; onChan
         <Link href={`/garzon/mesas/${alert.tableId}`} className={buttonClasses({ variant: "secondary" })}>
           Ver cuenta de la mesa
         </Link>
-      ) : alert.kind === "confirm" || alert.kind === "idle" ? (
+      ) : alert.kind === "confirm" ? (
+        <>
+          <Button onClick={confirm} loading={busy}>
+            Confirmar mesa
+          </Button>
+          <Link href={`/garzon/mesas/${alert.tableId}`} className={buttonClasses({ variant: "secondary" })}>
+            Ver pedido
+          </Link>
+        </>
+      ) : alert.kind === "idle" ? (
         <Link href={`/garzon/mesas/${alert.tableId}`} className={buttonClasses({ variant: "secondary" })}>
           Ir a la mesa
         </Link>

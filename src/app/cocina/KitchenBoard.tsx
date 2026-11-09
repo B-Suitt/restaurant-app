@@ -153,9 +153,9 @@ export function KitchenBoard() {
           })}
         </main>
 
-        <footer className="flex h-9 shrink-0 items-center justify-between gap-4 px-6.5 text-xs text-muted">
+        <footer className="flex h-9 shrink-0 items-center justify-between gap-4 px-6.5 text-sm text-muted">
           <p>
-            {active.length} platos activos · Objetivo: {KITCHEN_TARGET_MINUTES} min
+            {active.length} {active.length === 1 ? "plato activo" : "platos activos"} · Objetivo: {KITCHEN_TARGET_MINUTES} min
           </p>
           <p>La entrega al comensal la confirma el garzón.</p>
         </footer>
@@ -195,7 +195,7 @@ function KitchenCard({ item, now, onChange }: { item: Item; now: number; onChang
           {formatElapsed(elapsed)}
         </span>
       </div>
-      <p className="text-xs text-muted">
+      <p className="text-sm text-muted">
         #{item.orders.number} · Llegada {formatClock(item.orders.created_at)}
         {isNew && " · NUEVO"}
       </p>
@@ -215,8 +215,8 @@ function KitchenCard({ item, now, onChange }: { item: Item; now: number; onChang
       >
         {item.note || "Sin notas"}
       </p>
-      {isLate && <p className="text-xs text-primary">Atrasado · Supera el objetivo de {KITCHEN_TARGET_MINUTES} min</p>}
-      {error && <p className="text-xs text-primary">{error}</p>}
+      {isLate && <p className="text-sm text-primary">Atrasado · Supera el objetivo de {KITCHEN_TARGET_MINUTES} min</p>}
+      {error && <p className="text-sm text-primary">{error}</p>}
       {action ? (
         <Button onClick={advance} loading={busy}>
           {action.label}

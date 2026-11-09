@@ -65,12 +65,12 @@ export function DishView() {
               <p className="text-sm text-muted">Opcional</p>
             </div>
             {dish.dish_extras.map((extra) => (
-              <label key={extra.id} className="flex cursor-pointer items-center gap-3 py-1 text-base">
+              <label key={extra.id} className="flex min-h-11 cursor-pointer items-center gap-3 text-base">
                 <input
                   type="checkbox"
                   checked={extraIds.includes(extra.id)}
                   onChange={() => toggleExtra(extra.id)}
-                  className="size-4 accent-muted"
+                  className="size-5 accent-muted"
                 />
                 <span className="flex-1">{extra.name}</span>
                 <span>{extra.price > 0 ? `+${formatPrice(extra.price)}` : "Sin costo"}</span>
@@ -89,6 +89,7 @@ export function DishView() {
         </div>
 
         <Button
+          className="sticky bottom-20 shadow-lg"
           disabled={!dish.available}
           onClick={() => {
             addToCart({ dishId: dish.id, quantity, note, extraIds });

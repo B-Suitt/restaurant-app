@@ -11,7 +11,7 @@ let mounts = 0;
  * Carga datos y los vuelve a cargar ante cualquier cambio en las tablas indicadas.
  * Realtime solo entrega las filas que RLS permite leer.
  *
- * - Carga recién cuando el canal queda SUBSCRIBED: cambios hechos antes se perderían.
+ * - Carga recién cuando el canal queda SUBSCRIBED, y otra vez cuando Realtime ya escucha la base.
  * - Al reconectar vuelve a cargar, porque Realtime no reenvía lo ocurrido sin conexión.
  * - `live` es null mientras se conecta por primera vez, para no mostrar "Sin conexión" al abrir la vista.
  */
@@ -56,6 +56,11 @@ export function useLiveData<T>(
     for (const table of tablesKey.split(",")) {
       channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, scheduleReload);
     }
+    // SUBSCRIBED llega antes de que Realtime escuche la base: lo ocurrido en ese intervalo se recupera aquí.
+    channel = channel.on("system", {}, (message: { extension?: string; status?: string }) => {
+      if (message.extension === "postgres_changes" && message.status === "ok") scheduleReload();
+    });
+
     // Sin esperar el token, al abrir la página el canal se une como anónimo y RLS le oculta todos los cambios.
     let cancelled = false;
     supabase.realtime.setAuth().then(() => {

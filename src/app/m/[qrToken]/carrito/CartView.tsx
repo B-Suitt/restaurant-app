@@ -108,12 +108,13 @@ export function CartView() {
         </Link>
 
         {cart.length > 0 && (
-          <InfoNote title="Un pedido, directo a cocina">
-            Tu garzón también recibirá el pedido. El pago se realiza fuera de la app.
+          <InfoNote title="Del carrito a la cocina">
+            Con tu primer pedido, el garzón confirma la mesa; después todo llega directo a cocina. El pago se realiza fuera de
+            la app.
           </InfoNote>
         )}
         <WaiterCallActions />
-        <p className="text-center text-xs text-muted">El pago se realiza directamente en el restaurante.</p>
+        <p className="text-center text-sm text-muted">El pago se realiza directamente en el restaurante.</p>
       </main>
       <ClientNav active="menu" />
     </>
@@ -150,7 +151,11 @@ function CartRow({
       {details.length > 0 && <p className="text-sm text-muted">{details.join(" · ")}</p>}
       <div className="flex items-center justify-between">
         <QuantityStepper value={line.quantity} onChange={onQuantity} label={`Cantidad de ${dish?.name ?? "plato"}`} />
-        <button type="button" onClick={onRemove} className="cursor-pointer text-sm text-primary hover:underline">
+        <button
+          type="button"
+          onClick={onRemove}
+          className="-mr-2 flex min-h-11 cursor-pointer items-center px-2 text-sm text-primary hover:underline"
+        >
           Eliminar
         </button>
       </div>

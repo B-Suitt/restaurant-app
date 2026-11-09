@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 
 const control =
   "w-full min-h-12 rounded-sm border border-border bg-surface p-3 text-base text-ink " +
-  "placeholder:text-subtle outline-none transition-colors " +
+  "placeholder:text-muted outline-none transition-colors " +
   "focus:border-ink aria-invalid:border-primary " +
   "disabled:bg-surface-muted disabled:text-muted";
 

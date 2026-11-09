@@ -72,7 +72,7 @@ export function TablesGrid() {
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         <LiveIndicator live={live} />
 
-        <dl className="grid grid-cols-3 gap-3">
+        <dl className="grid grid-cols-3 items-start gap-3">
           <Stat value={occupied} label="Mesas ocupadas" />
           <Stat value={(tables?.length ?? 0) - occupied} label="Mesas libres" />
           <Stat value={pending} label="Por atender" highlight={pending > 0} />
@@ -141,7 +141,7 @@ function TableCard({ table, now }: { table: TableRow; now: number }) {
           <Armchair className="size-4.5 text-muted" aria-hidden />
         </div>
         <Chip tone={tone}>{label}</Chip>
-        <p className="text-xs text-muted">{detail}</p>
+        <p className="text-sm text-muted">{detail}</p>
       </Link>
     </li>
   );

@@ -74,7 +74,7 @@ export function MenuView() {
           </Link>
         )}
         <WaiterCallActions />
-        <p className="text-center text-xs text-muted">El pago se realiza directamente en el restaurante.</p>
+        <p className="text-center text-sm text-muted">El pago se realiza directamente en el restaurante.</p>
       </main>
       <ClientNav active="menu" />
     </>

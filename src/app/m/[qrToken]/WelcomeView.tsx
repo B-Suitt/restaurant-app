@@ -49,11 +49,11 @@ export function WelcomeView() {
           {STEPS.map(([title, text]) => (
             <li key={title} className="flex flex-col gap-2">
               <span className="text-md font-bold">{title}</span>
-              <span className="text-xs text-muted">{text}</span>
+              <span className="text-sm text-muted">{text}</span>
             </li>
           ))}
         </ol>
-        <p className="text-xs text-muted">Sin registro. El pago se realiza en el restaurante.</p>
+        <p className="text-sm text-muted">Sin registro. El pago se realiza en el restaurante.</p>
       </main>
       <ClientNav />
     </>
