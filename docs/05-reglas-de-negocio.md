@@ -22,13 +22,11 @@ Tomadas para poder avanzar; se pueden cambiar.
 | 14 | Una mesa con historial no se elimina: se desactiva. Una mesa con una estadía abierta no se elimina ni se desactiva (sí se puede editar su número, zona o capacidad). |
 | 15 | El historial de pedidos incluye los de mesas abiertas y cerradas. |
 | 16 | Al cerrarse la mesa, el cliente pasa a una página de agradecimiento (`/gracias`). Recargar o volver atrás no abre otra estadía; para volver a pedir hay que escanear el QR. |
-
-## Preguntas abiertas
-
-- [ ] ¿Cómo evitamos pedidos desde fuera del local con una foto del QR? (código corto en la
-      mesa, validación del garzón al abrir la mesa, o QR que cambia por sesión)
-- [ ] ¿Se muestra propina sugerida en la cuenta? ¿Qué porcentaje?
-- [ ] ¿Se puede modificar un plato ya enviado (cantidad, nota) o solo cancelarlo?
-- [ ] ¿Qué pasa si el cliente se va sin pagar? ¿Se marca de alguna forma al cerrar?
-- [ ] ¿Cuánto tiempo sin actividad antes de avisar que una mesa sigue abierta?
-- [ ] ¿Desde cuántos minutos un pedido se considera atrasado en cocina?
+| 17 | El primer pedido de una estadía espera a que el garzón confirme que hay clientes en la mesa; después, los pedidos llegan directo a cocina. Un pedido ingresado por el garzón confirma la mesa. |
+| 18 | En una estadía sin pedidos, los celulares que entraron hace más de 2 horas salen cuando alguien vuelve a escanear. |
+| 19 | Un pedido admite hasta 50 líneas. |
+| 20 | La cuenta muestra una propina sugerida del 10%, informativa y voluntaria. |
+| 21 | Un plato enviado no se modifica: se cancela mientras está en Recibido y se pide de nuevo. |
+| 22 | Al cerrar la mesa, el garzón puede marcar que el cliente se fue sin pagar; el admin lo ve en el historial. |
+| 23 | Una mesa ocupada con 90 minutos sin pedidos ni llamados genera un aviso al garzón. |
+| 24 | Un plato se considera atrasado a los 20 minutos desde que llega a cocina. |

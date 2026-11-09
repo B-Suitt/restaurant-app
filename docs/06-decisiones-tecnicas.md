@@ -64,5 +64,5 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 
 ## Pendientes
 - [ ] Confirmar el stack entre ambos.
-- [ ] Definir el hosting: Vercel o VPS.
+- [x] Hosting: Vercel.
 - [ ] Crear las variables de diseño (colores, tipografía, espaciado) en Figma.

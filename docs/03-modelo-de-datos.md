@@ -37,10 +37,12 @@ Cada estadía de clientes en una mesa. Agrupa todos los pedidos en una cuenta.
 | id | uuid | PK |
 | table_id | uuid | FK → tables |
 | status | text | `open` \| `closed` |
-| guest_count | int | Cantidad de personas; opcional |
 | opened_at | timestamptz | |
+| confirmed_at | timestamptz | Cuándo confirmó el garzón; nulo = los pedidos aún no llegan a cocina |
+| confirmed_by | uuid | FK → profiles (garzón que confirmó) |
 | closed_at | timestamptz | Nulo mientras está abierta |
 | closed_by | uuid | FK → profiles (garzón que cerró) |
+| unpaid | boolean | El garzón marcó que el cliente se fue sin pagar |
 
 Restricción: una sola sesión `open` por mesa.
 
@@ -167,10 +169,11 @@ escritura: todo cambio pasa por estas funciones, que validan rol, sesión y prec
 
 | Función | Quién | Qué hace |
 |---|---|---|
-| `join_table(qr_token, guest_count?)` | Cliente | Abre la sesión o se une a la abierta. Error `invalid_qr` si el token no existe o la mesa está inactiva |
-| `open_table(table_id, guest_count?)` | Garzón | Abre o retoma la sesión de una mesa |
-| `place_order(session_id, items)` | Cliente de la mesa o garzón | Crea la ronda con precios de la carta. Error `dish_unavailable` si un plato está agotado |
-| `set_item_status(item_id, status)` | Cocina, garzón o cliente (solo cancelar) | Avanza el estado; un trigger impide saltos y registra el evento |
+| `join_table(qr_token)` | Cliente | Abre la sesión o se une a la abierta. En una sesión sin pedidos saca a los celulares con más de 2 horas. Error `invalid_qr` si el token no existe o la mesa está inactiva |
+| `open_table(table_id)` | Garzón | Abre o retoma la sesión de una mesa |
+| `confirm_session(session_id)` | Garzón | Confirma que hay clientes: los pedidos pasan a cocina |
+| `place_order(session_id, items)` | Cliente de la mesa o garzón | Crea la ronda con precios de la carta, hasta 50 líneas. Un pedido del garzón confirma la mesa. Error `dish_unavailable` si un plato está agotado |
+| `set_item_status(item_id, status)` | Cocina, garzón o cliente (solo cancelar) | Avanza el estado; cocina solo en mesas confirmadas. Un trigger impide saltos y registra el evento |
 | `call_waiter(session_id, type)` | Cliente de la mesa | Llamado `call` o `bill`; no duplica uno pendiente |
 | `attend_call(call_id)` | Garzón | Marca el llamado como atendido |
-| `close_session(session_id)` | Garzón | Cierra la mesa y atiende los llamados pendientes |
+| `close_session(session_id, unpaid?)` | Garzón | Cierra la mesa, atiende los llamados pendientes y registra si se fue sin pagar |

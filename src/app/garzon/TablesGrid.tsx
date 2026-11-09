@@ -10,7 +10,7 @@ import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
 import { sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
-import { TABLE_STATUS_DISPLAY, tableStatus } from "@/lib/table-status";
+import { idleSince, TABLE_STATUS_DISPLAY, tableStatus } from "@/lib/table-status";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
@@ -27,7 +27,7 @@ async function loadTables() {
     supabase
       .from("table_sessions")
       .select(
-        "id, table_id, guest_count, waiter_calls(type, attended_at), orders(order_items(quantity, unit_price, status, order_item_extras(price)))",
+        "id, table_id, confirmed_at, waiter_calls(type, attended_at, created_at), orders(created_at, order_items(quantity, unit_price, status, order_item_extras(price)))",
       )
       .eq("status", "open"),
   ]);
@@ -37,8 +37,8 @@ async function loadTables() {
     const session = byTable.get(table.id);
     return {
       ...table,
-      guestCount: session?.guest_count ?? null,
       status: tableStatus(session),
+      idleAt: session ? idleSince(session) : null,
       total: session ? sessionTotal(session.orders) : 0,
     };
   });
@@ -60,7 +60,8 @@ export function TablesGrid() {
   const zones = [...new Set(tables?.map((t) => t.zone))];
   const visible = tables?.filter((t) => !zone || t.zone === zone) ?? [];
   const occupied = tables?.filter((t) => t.status !== "libre").length ?? 0;
-  const pending = tables?.filter((t) => t.status === "llamando" || t.status === "pidiendo_cuenta").length ?? 0;
+  const pending =
+    tables?.filter((t) => t.status === "llamando" || t.status === "pidiendo_cuenta" || t.status === "por_confirmar").length ?? 0;
 
   return (
     <>
@@ -96,7 +97,7 @@ export function TablesGrid() {
           <>
             <ul className="grid grid-cols-2 gap-2.5">
               {visible.map((table) => (
-                <TableCard key={table.id} table={table} />
+                <TableCard key={table.id} table={table} now={now} />
               ))}
             </ul>
             {zone && (
@@ -123,12 +124,11 @@ function Stat({ value, label, highlight = false }: { value: number; label: strin
   );
 }
 
-function TableCard({ table }: { table: TableRow }) {
+function TableCard({ table, now }: { table: TableRow; now: number }) {
   const { label, tone } = TABLE_STATUS_DISPLAY[table.status];
+  const idle = now > 0 && table.status === "ocupada" && table.idleAt !== null && table.idleAt <= now;
   const detail =
-    table.status === "libre"
-      ? `${table.capacity} lugares`
-      : [table.guestCount && `${table.guestCount} personas`, formatPrice(table.total)].filter(Boolean).join(" · ");
+    table.status === "libre" ? `${table.capacity} lugares` : `${formatPrice(table.total)}${idle ? " · Sin actividad" : ""}`;
 
   return (
     <li>

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { TotalRow } from "@/components/ui/TotalRow";
 import { formatPrice } from "@/lib/format-price";
+import { SUGGESTED_TIP_RATE } from "@/lib/restaurant";
 import { includedVat, loadSessionOrders, sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
@@ -33,9 +34,10 @@ async function loadBill(sessionId: string) {
 
 // Frame "Cliente · Cuenta de la mesa"
 export function BillView() {
-  const { basePath, sessionId, tableNumber, guestCount } = useClientSession();
+  const { basePath, sessionId, tableNumber } = useClientSession();
   const { data } = useLiveData(`client-bill-${sessionId}`, ["orders", "order_items"], () => loadBill(sessionId));
   const total = data ? sessionTotal(data.rounds) : 0;
+  const tip = Math.round(total * SUGGESTED_TIP_RATE);
 
   return (
     <>
@@ -58,9 +60,7 @@ export function BillView() {
         ) : (
           <Card className="flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
-              <p className="text-base font-bold">
-                {[tableLabel(tableNumber), guestCount && `${guestCount} personas`].filter(Boolean).join(" · ")}
-              </p>
+              <p className="text-base font-bold">{tableLabel(tableNumber)}</p>
               <p className="text-sm text-muted">Hoy · {formatClock(data.openedAt)}</p>
             </div>
 
@@ -97,6 +97,18 @@ export function BillView() {
               </div>
             </div>
             <TotalRow label="Total" amount={total} />
+            {total > 0 && (
+              <div className="flex flex-col gap-2 border-t border-border pt-3 text-sm text-muted">
+                <div className="flex justify-between gap-3">
+                  <span>Propina sugerida ({SUGGESTED_TIP_RATE * 100}%, voluntaria)</span>
+                  <span>{formatPrice(tip)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span>Total con propina</span>
+                  <span>{formatPrice(total + tip)}</span>
+                </div>
+              </div>
+            )}
           </Card>
         )}
 

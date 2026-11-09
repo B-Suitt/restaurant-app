@@ -1,7 +1,7 @@
 -- Reglas de negocio y permisos. Correr con: npx supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(30);
+select plan(46);
 
 -- ---------------------------------------------------------------------------
 -- Preparación (como postgres)
@@ -20,6 +20,7 @@ insert into auth.users (id, email, aud, role, is_anonymous) values
   ('10000000-0000-0000-0000-000000000001', 'w@test.cl', 'authenticated', 'authenticated', false),
   ('10000000-0000-0000-0000-000000000002', 'k@test.cl', 'authenticated', 'authenticated', false),
   ('10000000-0000-0000-0000-000000000003', 'x@test.cl', 'authenticated', 'authenticated', false),
+  ('10000000-0000-0000-0000-000000000004', 'a@test.cl', 'authenticated', 'authenticated', false),
   ('10000000-0000-0000-0000-0000000000a1', null, 'authenticated', 'authenticated', true),
   ('10000000-0000-0000-0000-0000000000a2', null, 'authenticated', 'authenticated', true),
   ('10000000-0000-0000-0000-0000000000a3', null, 'authenticated', 'authenticated', true);
@@ -27,10 +28,11 @@ insert into auth.users (id, email, aud, role, is_anonymous) values
 insert into public.profiles (id, name, email, role, active) values
   ('10000000-0000-0000-0000-000000000001', 'Garzón', 'w@test.cl', 'waiter', true),
   ('10000000-0000-0000-0000-000000000002', 'Cocina', 'k@test.cl', 'kitchen', true),
-  ('10000000-0000-0000-0000-000000000003', 'Garzón inactivo', 'x@test.cl', 'waiter', false);
+  ('10000000-0000-0000-0000-000000000003', 'Garzón inactivo', 'x@test.cl', 'waiter', false),
+  ('10000000-0000-0000-0000-000000000004', 'Admin', 'a@test.cl', 'admin', true);
 
 insert into public.tables (number, capacity, qr_token, active) values
-  (101, 4, 'tok-1', true), (102, 4, 'tok-2', true), (103, 4, 'tok-3', false);
+  (101, 4, 'tok-1', true), (102, 4, 'tok-2', true), (103, 4, 'tok-3', false), (104, 4, 'tok-4', true);
 
 insert into public.categories (id, name) values ('20000000-0000-0000-0000-000000000001', 'Test');
 insert into public.dishes (id, category_id, name, price, available) values
@@ -43,7 +45,7 @@ insert into public.dish_extras (id, dish_id, name, price) values
 -- Entrar por QR
 -- ---------------------------------------------------------------------------
 select tests.login('10000000-0000-0000-0000-0000000000a1');
-select set_config('t.s1', public.join_table('tok-1', 2)::text, true);
+select set_config('t.s1', public.join_table('tok-1')::text, true);
 select ok(current_setting('t.s1') is not null, 'el primer escaneo abre la sesión');
 select throws_ok($$ select public.join_table('no-existe') $$, 'P0001', 'invalid_qr', 'un token inválido da error');
 select throws_ok($$ select public.join_table('tok-3') $$, 'P0001', 'invalid_qr', 'una mesa inactiva da error');
@@ -100,6 +102,30 @@ select throws_ok(
   'P0001', 'forbidden', 'un cliente no puede pedir en otra mesa'
 );
 
+select throws_ok(
+  format($$ select public.place_order(%L, %L::jsonb) $$, current_setting('t.s2'),
+    (select jsonb_agg(jsonb_build_object('dish_id', '30000000-0000-0000-0000-000000000001', 'quantity', 1)) from generate_series(1, 51))),
+  'P0001', 'too_many_items', 'un pedido no admite más de 50 líneas'
+);
+
+-- ---------------------------------------------------------------------------
+-- Confirmación del garzón
+-- ---------------------------------------------------------------------------
+select tests.login('10000000-0000-0000-0000-000000000002'); -- cocina
+select throws_ok(format($$ select public.set_item_status(%L, 'en_preparacion') $$, current_setting('t.i1')),
+  'P0001', 'session_not_confirmed', 'cocina no trabaja platos de una mesa sin confirmar');
+
+select tests.login('10000000-0000-0000-0000-0000000000a1');
+select throws_ok(format($$ select public.confirm_session(%L) $$, current_setting('t.s1')),
+  'P0001', 'forbidden', 'un cliente no puede confirmar la mesa');
+
+select tests.login('10000000-0000-0000-0000-000000000001'); -- garzón
+select lives_ok(format($$ select public.confirm_session(%L) $$, current_setting('t.s1')), 'el garzón confirma la mesa');
+select ok(
+  (select confirmed_at is not null from public.table_sessions where id = current_setting('t.s1')::uuid),
+  'la mesa queda confirmada'
+);
+
 -- ---------------------------------------------------------------------------
 -- Estados
 -- ---------------------------------------------------------------------------
@@ -145,6 +171,20 @@ select set_config('t.c1', public.call_waiter(current_setting('t.s1')::uuid, 'bil
 select is(public.call_waiter(current_setting('t.s1')::uuid, 'bill')::text, current_setting('t.c1'),
   'pedir la cuenta dos veces no duplica el llamado');
 
+-- Un cliente de otra mesa no puede actuar sobre esta.
+select tests.login('10000000-0000-0000-0000-0000000000a3');
+select throws_ok(format($$ select public.set_item_status(%L, 'cancelado') $$, current_setting('t.i2')),
+  'P0001', 'forbidden', 'un cliente no cancela platos de otra mesa');
+select throws_ok(format($$ select public.close_session(%L) $$, current_setting('t.s1')),
+  'P0001', 'forbidden', 'un cliente no cierra mesas');
+select throws_ok(format($$ select public.attend_call(%L) $$, current_setting('t.c1')),
+  'P0001', 'forbidden', 'un cliente no atiende llamados');
+select is((select count(*)::int from public.profiles), 0, 'un cliente no lee los correos del personal');
+
+select tests.login('10000000-0000-0000-0000-000000000002'); -- cocina
+select throws_ok(format($$ select public.close_session(%L) $$, current_setting('t.s1')),
+  'P0001', 'forbidden', 'cocina no cierra mesas');
+
 select tests.login('10000000-0000-0000-0000-000000000003'); -- garzón desactivado
 select is((select count(*)::int from public.table_sessions), 0, 'un usuario desactivado no ve las mesas');
 select throws_ok(format($$ select public.close_session(%L) $$, current_setting('t.s1')),
@@ -177,6 +217,48 @@ select throws_ok(
 select lives_ok(
   format($$ select public.place_order(%L, '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]') $$, current_setting('t.s2')),
   'el plato se sigue pidiendo sin el adicional retirado'
+);
+
+-- ---------------------------------------------------------------------------
+-- Pedido del garzón, regla 14, sesiones sin pedidos y cierre sin pago
+-- ---------------------------------------------------------------------------
+select tests.login('10000000-0000-0000-0000-000000000001'); -- garzón
+select public.place_order(current_setting('t.s2')::uuid, '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]'::jsonb);
+select ok(
+  (select confirmed_at is not null from public.table_sessions where id = current_setting('t.s2')::uuid),
+  'un pedido del garzón confirma la mesa'
+);
+
+select tests.login('10000000-0000-0000-0000-000000000004'); -- admin
+select throws_ok($$ update public.tables set active = false where number = 102 $$,
+  'P0001', 'table_has_open_session', 'una mesa con estadía en curso no se desactiva');
+
+-- Un celular que entró hace más de 2 horas a una sesión vacía sale cuando alguien más escanea.
+select tests.login('10000000-0000-0000-0000-0000000000a1');
+select set_config('t.s4', public.join_table('tok-4')::text, true);
+reset role;
+update public.session_guests set joined_at = now() - interval '3 hours'
+where session_id = current_setting('t.s4')::uuid;
+select tests.login('10000000-0000-0000-0000-0000000000a2');
+select public.join_table('tok-4');
+select tests.login('10000000-0000-0000-0000-0000000000a1');
+select is((select count(*)::int from public.table_sessions where id = current_setting('t.s4')::uuid), 0,
+  'un celular antiguo sale de la sesión sin pedidos');
+
+select tests.login('10000000-0000-0000-0000-000000000004'); -- admin
+select lives_ok($$ update public.tables set active = false where number = 104 $$,
+  'una mesa con una sesión vacía se puede desactivar');
+select tests.login('10000000-0000-0000-0000-0000000000a2');
+select throws_ok(
+  format($$ select public.place_order(%L, '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]') $$, current_setting('t.s4')),
+  'P0001', 'table_inactive', 'una mesa inactiva no recibe pedidos'
+);
+
+select tests.login('10000000-0000-0000-0000-000000000001'); -- garzón
+select public.close_session(current_setting('t.s2')::uuid, true);
+select ok(
+  (select unpaid from public.table_sessions where id = current_setting('t.s2')::uuid),
+  'el cierre registra que se fue sin pagar'
 );
 
 select * from finish();

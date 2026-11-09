@@ -26,7 +26,7 @@ async function loadTables() {
   const supabase = createClient();
   const [tables, sessions] = await Promise.all([
     supabase.from("tables").select("id, number, capacity, zone, active, table_sessions(count)").order("number"),
-    supabase.from("table_sessions").select("table_id, orders(id), waiter_calls(type, attended_at)").eq("status", "open"),
+    supabase.from("table_sessions").select("table_id, confirmed_at, orders(id), waiter_calls(type, attended_at)").eq("status", "open"),
   ]);
   if (tables.error || sessions.error) throw tables.error ?? sessions.error;
   const open = new Map(sessions.data.map((s) => [s.table_id, s]));

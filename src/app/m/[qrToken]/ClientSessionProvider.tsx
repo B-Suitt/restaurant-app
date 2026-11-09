@@ -15,7 +15,6 @@ type SessionData = {
   sessionId: string;
   tableNumber: number;
   zone: string;
-  guestCount: number | null;
   categories: MenuCategory[];
   dishes: MenuDish[];
 };
@@ -108,7 +107,7 @@ function joinTable(qrToken: string) {
       if (error) throw error;
 
       const [session, menu] = await Promise.all([
-        supabase.from("table_sessions").select("guest_count, tables(number, zone)").eq("id", sessionId).single(),
+        supabase.from("table_sessions").select("tables(number, zone)").eq("id", sessionId).single(),
         loadMenu(),
       ]);
       if (session.error) throw session.error;
@@ -117,7 +116,6 @@ function joinTable(qrToken: string) {
         sessionId,
         tableNumber: session.data.tables.number,
         zone: session.data.tables.zone,
-        guestCount: session.data.guest_count,
         ...menu,
       };
     })();

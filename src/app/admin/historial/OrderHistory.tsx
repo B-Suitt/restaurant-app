@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { Pagination, paginate } from "@/components/ui/Pagination";
+import { Chip } from "@/components/ui/Chip";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { formatPrice } from "@/lib/format-price";
@@ -23,6 +24,9 @@ import { TableSkeleton } from "@/components/ui/Skeleton";
 
 const PAGE_SIZE = 10;
 
+/** Supabase entrega hasta 1.000 filas por consulta: los rangos largos se piden por partes. */
+const FETCH_SIZE = 1000;
+
 type Filters = { from: string; to: string; tableId: string; status: OrderItemStatus | "" };
 
 /** Fecha local como "2026-11-06" (valor de <input type="date">). */
@@ -36,22 +40,32 @@ async function loadHistory({ from, to, tableId }: Filters) {
   const start = new Date(`${from}T00:00:00`);
   const end = new Date(`${to}T00:00:00`);
   end.setDate(end.getDate() + 1);
-  let query = supabase
-    .from("orders")
-    .select(
-      "id, number, created_at, table_sessions!inner(table_id, tables(number)), order_items(quantity, unit_price, status, order_item_extras(price))",
-    )
-    .gte("created_at", start.toISOString())
-    .lt("created_at", end.toISOString())
-    .order("created_at", { ascending: false });
-  if (tableId) query = query.eq("table_sessions.table_id", tableId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data.map((o) => ({
+  const fetchPage = (from: number) => {
+    let query = supabase
+      .from("orders")
+      .select(
+        "id, number, created_at, table_sessions!inner(table_id, unpaid, tables(number)), order_items(quantity, unit_price, status, order_item_extras(price))",
+      )
+      .gte("created_at", start.toISOString())
+      .lt("created_at", end.toISOString())
+      .order("created_at", { ascending: false })
+      .order("number", { ascending: false });
+    if (tableId) query = query.eq("table_sessions.table_id", tableId);
+    return query.range(from, from + FETCH_SIZE - 1);
+  };
+  const rows = [];
+  for (let from = 0; ; from += FETCH_SIZE) {
+    const { data, error } = await fetchPage(from);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < FETCH_SIZE) break;
+  }
+  return rows.map((o) => ({
     id: o.id,
     number: o.number,
     createdAt: o.created_at,
     table: o.table_sessions.tables.number,
+    unpaid: o.table_sessions.unpaid,
     status: orderStatusOf(o.order_items),
     total: o.order_items.filter((i) => i.status !== "cancelado").reduce((sum, i) => sum + itemTotal(i), 0),
   }));
@@ -187,7 +201,10 @@ function HistoryView({ today }: { today: string }) {
                       {formatClock(o.createdAt)}
                     </TableCell>
                     <TableCell>
-                      <StatusChip status={o.status} />
+                      <div className="flex flex-wrap gap-1.5">
+                        <StatusChip status={o.status} />
+                        {o.unpaid && <Chip tone="danger">Sin pagar</Chip>}
+                      </div>
                     </TableCell>
                     <TableCell className="text-base">{formatPrice(o.total)}</TableCell>
                     <TableCell>

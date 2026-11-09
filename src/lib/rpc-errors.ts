@@ -11,6 +11,10 @@ const MESSAGES: Record<string, string> = {
   extra_not_found: "Uno de los adicionales ya no está disponible.",
   item_not_found: "No encontramos ese plato.",
   invalid_transition: "Ese plato ya cambió de estado. Actualizamos la vista.",
+  too_many_items: "El pedido tiene demasiados platos distintos. Envíalo en dos partes.",
+  table_inactive: "Esta mesa no está disponible.",
+  session_not_confirmed: "El garzón aún no confirma esta mesa.",
+  table_has_open_session: "La mesa tiene una estadía abierta. Pide al garzón que la cierre antes.",
 };
 
 /** Mensaje en español para un error de Supabase o de red. */

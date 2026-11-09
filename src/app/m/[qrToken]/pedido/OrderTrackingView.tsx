@@ -7,10 +7,12 @@ import { LiveIndicator } from "@/components/layout/LiveIndicator";
 import { OrderItemRow } from "@/components/orders/OrderItemRow";
 import { buttonClasses } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { InfoNote } from "@/components/ui/InfoNote";
 import { StatusChip } from "@/components/ui/StatusChip";
 import { formatPrice } from "@/lib/format-price";
 import { ORDER_ITEM_STATUSES } from "@/lib/order-status";
 import { itemTotal, loadSessionOrders, type SessionOrder } from "@/lib/session-orders";
+import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { ClientNav } from "../ClientNav";
@@ -19,18 +21,28 @@ import { tableLabel, useClientSession } from "../ClientSessionProvider";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CardsSkeleton } from "@/components/ui/Skeleton";
 
+async function loadTracking(sessionId: string) {
+  const [orders, session] = await Promise.all([
+    loadSessionOrders(sessionId),
+    createClient().from("table_sessions").select("confirmed_at").eq("id", sessionId).maybeSingle(),
+  ]);
+  if (session.error) throw session.error;
+  return { orders, confirmed: !!session.data?.confirmed_at };
+}
+
 // Frame "Cliente · Seguimiento"
 export function OrderTrackingView() {
-  const { basePath, sessionId, tableNumber, guestCount } = useClientSession();
-  const { data: orders, live, reload } = useLiveData(`client-${sessionId}`, ["orders", "order_items"], () =>
-    loadSessionOrders(sessionId),
+  const { basePath, sessionId, tableNumber } = useClientSession();
+  const { data, live, reload } = useLiveData(`client-${sessionId}`, ["orders", "order_items", "table_sessions"], () =>
+    loadTracking(sessionId),
   );
+  const orders = data?.orders ?? null;
 
   return (
     <>
       <AppHeader
         title="Pedidos de la mesa"
-        subtitle={[tableLabel(tableNumber), guestCount && `${guestCount} personas`].filter(Boolean).join(" · ")}
+        subtitle={tableLabel(tableNumber)}
         backHref={`${basePath}/menu`}
         action={
           <HeaderIcon>
@@ -42,6 +54,12 @@ export function OrderTrackingView() {
         <LiveIndicator live={live} />
         <h2 className="text-[27px] leading-[1.4]">Tu pedido, paso a paso.</h2>
         <p className="text-base text-muted">Aquí verás el estado de cada plato de la mesa.</p>
+
+        {data && !data.confirmed && data.orders.length > 0 && (
+          <InfoNote title="Esperando al garzón">
+            Tu garzón confirmará la mesa y tu pedido pasará a cocina. Puedes llamarlo si lo necesitas.
+          </InfoNote>
+        )}
 
         {orders === null ? (
           <CardsSkeleton count={2} label="Cargando pedidos…" />

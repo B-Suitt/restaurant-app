@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
+import { APP_NAME } from "@/lib/restaurant";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "[nombre-proyecto]",
+  title: APP_NAME,
   description: "Pide desde tu mesa y sigue tu pedido en tiempo real.",
 };
 

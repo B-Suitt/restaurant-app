@@ -15,7 +15,8 @@ import { RESTAURANT_NAME } from "@/lib/restaurant";
 import { createClient } from "@/lib/supabase/client";
 import { FormSkeleton } from "@/components/ui/Skeleton";
 import { Modal } from "@/components/ui/Modal";
-import { dbErrorMessage } from "@/lib/rpc-errors";
+import { dbErrorMessage, isLoadFailure } from "@/lib/rpc-errors";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 
 type Table = { number: number; zone: string; qr_token: string; active: boolean };
 type Format = "png" | "svg";
@@ -27,6 +28,7 @@ const qrUrl = (token: string) => `${window.location.origin}/m/${encodeURICompone
 export function TableQr({ tableId }: { tableId: string }) {
   const [table, setTable] = useState<Table | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [format, setFormat] = useState<Format>("png");
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
@@ -57,7 +59,8 @@ export function TableQr({ tableId }: { tableId: string }) {
       .select("number, zone, qr_token, active")
       .eq("id", tableId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (isLoadFailure(error)) return setLoadFailed(true);
         if (!data) return setNotFound(true);
         setTable(data);
         QRCode.toDataURL(qrUrl(data.qr_token), { width: 480, margin: 0, errorCorrectionLevel: "M" }).then(setPreview);
@@ -99,7 +102,9 @@ export function TableQr({ tableId }: { tableId: string }) {
           <AdminPageTitle title={`Código QR · ${label}`} subtitle={`Mesas y QR / ${label} / Código QR`} />
         </div>
 
-        {notFound ? (
+        {loadFailed ? (
+          <ErrorNote>No pudimos cargar la mesa. Revisa tu conexión y recarga la página.</ErrorNote>
+        ) : notFound ? (
           <LinkNotice text="No encontramos esa mesa." href="/admin/mesas" linkLabel="Volver a las mesas" />
         ) : !table ? (
           <FormSkeleton label="Cargando código…" />

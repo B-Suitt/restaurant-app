@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { Modal } from "@/components/ui/Modal";
+import { ToggleRow } from "@/components/ui/ToggleRow";
 import { TotalRow } from "@/components/ui/TotalRow";
 import { tableLabel } from "@/lib/order-format";
 import { errorMessage } from "@/lib/rpc-errors";
@@ -34,7 +35,7 @@ async function loadTable(tableId: string) {
     supabase
       .from("table_sessions")
       .select(
-        `id, guest_count, opened_at,
+        `id, opened_at, confirmed_at,
          waiter_calls(id, type, created_at, attended_at),
          orders(id, number, created_at, order_items(id, quantity, note, unit_price, status, dishes(name), order_item_extras(price, dish_extras(name))))`,
       )
@@ -105,7 +106,6 @@ export function TableDetail({ tableId }: { tableId: string }) {
             <p className="text-base text-muted">
               {session
                 ? [
-                    session.guest_count && `${session.guest_count} personas`,
                     table.zone,
                     // La sesión pudo crearse mucho antes de que llegaran estos clientes.
                     `Abierta a las ${formatClock(session.orders.at(-1)?.created_at ?? session.opened_at)}`,
@@ -131,6 +131,10 @@ export function TableDetail({ tableId }: { tableId: string }) {
               </>
             ) : (
               <>
+                {session.orders.length > 0 && !session.confirmed_at && (
+                  <ConfirmSession sessionId={session.id} onChange={reload} />
+                )}
+
                 {pendingCalls.map((call) => (
                   <PendingCall key={call.id} call={call} now={now} onChange={reload} />
                 ))}
@@ -190,6 +194,24 @@ export function TableDetail({ tableId }: { tableId: string }) {
   );
 }
 
+function ConfirmSession({ sessionId, onChange }: { sessionId: string; onChange: () => void }) {
+  const { busy, error, run } = useRowAction(onChange);
+  const confirm = () => run(() => createClient().rpc("confirm_session", { p_session_id: sessionId }));
+
+  return (
+    <Card tone="highlight" className="flex flex-col gap-3">
+      <p className="text-base font-bold">¿Hay clientes en esta mesa?</p>
+      <p className="text-sm text-muted">
+        El pedido llegará a cocina cuando confirmes. Si nadie está sentado aquí, cierra la mesa.
+      </p>
+      {error && <p className="text-sm text-primary">{error}</p>}
+      <Button onClick={confirm} loading={busy}>
+        Confirmar mesa
+      </Button>
+    </Card>
+  );
+}
+
 function PendingCall({
   call,
   now,
@@ -241,6 +263,7 @@ function CloseTableModal({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unpaid, setUnpaid] = useState(false);
   // No bloquea el cierre (regla no definida), pero avisa si quedan platos en curso.
   const inProgress = session.orders
     .flatMap((o) => o.order_items)
@@ -249,7 +272,7 @@ function CloseTableModal({
 
   async function confirm() {
     setBusy(true);
-    const { error: rpcError } = await createClient().rpc("close_session", { p_session_id: session.id });
+    const { error: rpcError } = await createClient().rpc("close_session", { p_session_id: session.id, p_unpaid: unpaid });
     setBusy(false);
     if (rpcError) {
       setError(errorMessage(rpcError));
@@ -272,6 +295,7 @@ function CloseTableModal({
           Quedan {inProgress} {inProgress === 1 ? "plato" : "platos"} sin entregar.
         </p>
       )}
+      <ToggleRow label="Se fue sin pagar" checked={unpaid} onChange={setUnpaid} onLabel="Sí" offLabel="No" />
       <p className="text-sm text-muted">
         La mesa quedará Libre. El historial se conservará. Esta acción no realiza ningún cobro.
       </p>

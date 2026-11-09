@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { AdminPageTitle, AdminTopBar } from "@/components/layout/AdminTopBar";
 import { Card } from "@/components/ui/Card";
+import { Chip } from "@/components/ui/Chip";
+import { ErrorNote } from "@/components/ui/ErrorNote";
 import { InfoNote } from "@/components/ui/InfoNote";
 import { LinkNotice } from "@/components/ui/LinkNotice";
 import { StatusChip } from "@/components/ui/StatusChip";
@@ -13,6 +15,7 @@ import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
 import { extrasText, tableLabel } from "@/lib/order-format";
 import { ORDER_ITEM_STATUS_DISPLAY, type OrderItemStatus } from "@/lib/order-status";
+import { isLoadFailure } from "@/lib/rpc-errors";
 import { itemTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
 import { formatClock } from "@/lib/time-format";
@@ -24,7 +27,7 @@ async function loadOrder(orderId: string) {
     .from("orders")
     .select(
       `id, number, created_at, created_by,
-       table_sessions(status, closed_at, closed_by, tables(number, zone)),
+       table_sessions(status, closed_at, closed_by, unpaid, tables(number, zone)),
        order_items(id, quantity, note, unit_price, status, dishes(name),
          order_item_extras(price, dish_extras(name)),
          order_item_events(status, changed_at, changed_by))`,
@@ -109,7 +112,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   useEffect(() => {
     loadOrder(orderId)
       .then(setData)
-      .catch(() => setError(true));
+      .catch((e) => (isLoadFailure(e) ? setError(true) : setData(null)));
   }, [orderId]);
 
   const order = data?.order;
@@ -124,7 +127,9 @@ export function OrderDetail({ orderId }: { orderId: string }) {
           subtitle={order ? `Historial / ${title} · ${capitalize(longDay.format(new Date(order.created_at)))}` : undefined}
         />
 
-        {error || data === null ? (
+        {error ? (
+          <ErrorNote>No pudimos cargar el pedido. Revisa tu conexión y recarga la página.</ErrorNote>
+        ) : data === null ? (
           <LinkNotice text="No encontramos ese pedido." href="/admin/historial" linkLabel="Volver al historial" />
         ) : !data || !order ? (
           <div className="flex flex-col gap-6">
@@ -170,6 +175,7 @@ function Detail({ data }: { data: Loaded }) {
           <p className="text-sm text-muted">
             {session.tables.zone} · {session.status === "closed" ? "Estadía cerrada" : "Estadía abierta"}
           </p>
+          {session.unpaid && <Chip tone="danger">Se fue sin pagar</Chip>}
         </Card>
         <Card className="flex flex-col gap-2 p-5">
           <p className="text-2xl">{attendant ?? "Sin asignar"}</p>

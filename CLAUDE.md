@@ -1,4 +1,4 @@
-# [nombre-proyecto]
+# Al Tiro
 
 Plataforma web de autogestión de pedidos y administración de mesas para restaurantes.
 El cliente escanea un QR en su mesa, pide desde el celular y los pedidos llegan en
@@ -56,8 +56,7 @@ Seguir el mismo estilo visual para:
 - Tailwind CSS
 - Supabase: PostgreSQL, Auth, Realtime y Storage (fotos de platos)
 - Lucide React para iconos
-- Hosting: por definir (Vercel o VPS). No agregar configuración específica de ningún
-  proveedor hasta que se decida.
+- Hosting: Vercel.
 
 ## Comandos
 
@@ -68,6 +67,7 @@ Seguir el mismo estilo visual para:
 - Supabase local (requiere Docker Desktop abierto): `npx supabase start` · `npx supabase stop`
 - Reiniciar base con migraciones y datos de prueba: `npx supabase db reset`
 - Tests de base de datos: `npm run db:test`
+- Pruebas de navegador (requieren Supabase local y `npm run build`): `npm run test:e2e`
 - Regenerar tipos tras cambiar el esquema: `npm run db:types`
 - Usuarios de prueba (contraseña `restaurante123`): `admin@`, `garzon@`, `cocina@restaurante.cl`.
   QR de prueba: `/m/mesa-01?scan=1` … `/m/mesa-08?scan=1` (sin `?scan=1` se trata como recarga).
@@ -128,6 +128,7 @@ Con Supabase Realtime:
   siguientes escaneos se unen a esa misma sesión.
 - Todas las rondas de pedidos de una sesión suman a una sola cuenta.
 - Un ítem solo se puede cancelar mientras está en `recibido`.
+- El primer pedido de una estadía espera a que el garzón confirme la mesa; recién ahí llega a cocina.
 - El pago es fuera de la app: el garzón cierra la mesa y la sesión queda `cerrada`.
 - Un QR de una mesa inactiva o un token inválido muestra una pantalla de error.
 - Un plato no disponible se muestra en gris y no se puede agregar al carrito.

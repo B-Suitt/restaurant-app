@@ -14,7 +14,7 @@ import { InfoNote } from "@/components/ui/InfoNote";
 import { LinkNotice } from "@/components/ui/LinkNotice";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { tableLabel } from "@/lib/order-format";
-import { dbErrorMessage } from "@/lib/rpc-errors";
+import { dbErrorMessage, isLoadFailure } from "@/lib/rpc-errors";
 import { createClient } from "@/lib/supabase/client";
 import { TABLE_STATUS_DISPLAY, tableStatus, type TableStatus } from "@/lib/table-status";
 import { FormSkeleton } from "@/components/ui/Skeleton";
@@ -33,6 +33,7 @@ export function TableForm({ tableId }: { tableId: string | null }) {
   const [active, setActive] = useState(true);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,10 +44,11 @@ export function TableForm({ tableId }: { tableId: string | null }) {
         supabase.from("tables").select("zone, number").order("number"),
         tableId ? supabase.from("tables").select("number, zone, capacity, active").eq("id", tableId).maybeSingle() : null,
         tableId
-          ? supabase.from("table_sessions").select("orders(id), waiter_calls(type, attended_at)").eq("table_id", tableId).eq("status", "open").maybeSingle()
+          ? supabase.from("table_sessions").select("confirmed_at, orders(id), waiter_calls(type, attended_at)").eq("table_id", tableId).eq("status", "open").maybeSingle()
           : null,
       ]);
-      const allZones = [...new Set(["Salón", "Terraza", ...(zones.data?.map((z) => z.zone) ?? [])])];
+      if (zones.error || isLoadFailure(table?.error) || session?.error) return setLoadFailed(true);
+      const allZones =[...new Set(["Salón", "Terraza", ...(zones.data?.map((z) => z.zone) ?? [])])];
       if (table) {
         if (!table.data) {
           setNotFound(true);
@@ -103,7 +105,9 @@ export function TableForm({ tableId }: { tableId: string | null }) {
       <main className="flex flex-col gap-6 px-9 py-10">
         <AdminPageTitle title={title} subtitle={isNew ? "Mesas y QR / Nueva mesa" : `Mesas y QR / ${label} / Editar`} />
 
-        {notFound ? (
+        {loadFailed ? (
+          <ErrorNote>No pudimos cargar la mesa. Revisa tu conexión y recarga la página.</ErrorNote>
+        ) : notFound ? (
           <LinkNotice text="No encontramos esa mesa." href="/admin/mesas" linkLabel="Volver a las mesas" />
         ) : !loaded ? (
           <FormSkeleton label="Cargando mesa…" />

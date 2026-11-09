@@ -217,19 +217,25 @@ isOneToOne: false
                   ]
                 },"table_sessions": {
                   Row: {
-                    "closed_at": string | null,"closed_by": string | null,"guest_count": number | null,"id": string,"opened_at": string,"status": string,"table_id": string
+                    "closed_at": string | null,"closed_by": string | null,"confirmed_at": string | null,"confirmed_by": string | null,"id": string,"opened_at": string,"status": string,"table_id": string,"unpaid": boolean
                   }
                   ComputedFields: never
                   Insert: {
-                    "closed_at"?: string | null,"closed_by"?: string | null,"guest_count"?: number | null,"id"?: string,"opened_at"?: string,"status"?: string,"table_id": string
+                    "closed_at"?: string | null,"closed_by"?: string | null,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"id"?: string,"opened_at"?: string,"status"?: string,"table_id": string,"unpaid"?: boolean
                   }
                   Update: {
-                    "closed_at"?: string | null,"closed_by"?: string | null,"guest_count"?: number | null,"id"?: string,"opened_at"?: string,"status"?: string,"table_id"?: string
+                    "closed_at"?: string | null,"closed_by"?: string | null,"confirmed_at"?: string | null,"confirmed_by"?: string | null,"id"?: string,"opened_at"?: string,"status"?: string,"table_id"?: string,"unpaid"?: boolean
                   }
                   Relationships: [
                     {
       foreignKeyName: "table_sessions_closed_by_fkey"
       columns: ["closed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "table_sessions_confirmed_by_fkey"
+      columns: ["confirmed_by"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -294,13 +300,16 @@ isOneToOne: false
 { Args: { "p_session_id": string,"p_type": string }; Returns: string
                            },
 "close_session":
+{ Args: { "p_session_id": string,"p_unpaid"?: boolean }; Returns: undefined
+                           },
+"confirm_session":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
 "join_table":
-{ Args: { "p_guest_count"?: number,"p_qr_token": string }; Returns: string
+{ Args: { "p_qr_token": string }; Returns: string
                            },
 "open_table":
-{ Args: { "p_guest_count"?: number,"p_table_id": string }; Returns: string
+{ Args: { "p_table_id": string }; Returns: string
                            },
 "place_order":
 { Args: { "p_items": Json,"p_session_id": string }; Returns: string

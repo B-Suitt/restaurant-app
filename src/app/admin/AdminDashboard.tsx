@@ -14,7 +14,7 @@ import { orderStatusOf, type OrderItemStatus } from "@/lib/order-status";
 import { KITCHEN_TARGET_MINUTES } from "@/lib/restaurant";
 import { itemTotal, sessionTotal } from "@/lib/session-orders";
 import { createClient } from "@/lib/supabase/client";
-import { TABLE_STATUS_DISPLAY, tableStatus } from "@/lib/table-status";
+import { kitchenStartTime, TABLE_STATUS_DISPLAY, tableStatus } from "@/lib/table-status";
 import { formatClock } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
@@ -37,14 +37,14 @@ async function loadDashboard() {
     supabase
       .from("table_sessions")
       .select(
-        "id, table_id, waiter_calls(type, attended_at), orders(order_items(quantity, unit_price, status, order_item_extras(price)))",
+        "id, table_id, confirmed_at, waiter_calls(type, attended_at), orders(order_items(quantity, unit_price, status, order_item_extras(price)))",
       )
       .eq("status", "open"),
     // Pedidos de hoy (el local no atiende pasada la medianoche).
     supabase
       .from("orders")
       .select(
-        `id, number, created_at, table_sessions(tables(number)),
+        `id, number, created_at, table_sessions(confirmed_at, tables(number)),
          order_items(quantity, unit_price, status, dishes(name), order_item_extras(price), order_item_events(status, changed_at))`,
       )
       .gte("created_at", since)
@@ -84,7 +84,7 @@ function summarize(data: Data, now: number) {
     o.order_items.flatMap((i) => {
       const start = statusTime(i.order_item_events, "recibido");
       const ready = statusTime(i.order_item_events, "listo_para_entregar");
-      return start && ready ? [new Date(ready).getTime() - new Date(start).getTime()] : [];
+      return start && ready ? [new Date(ready).getTime() - kitchenStartTime(start, o.table_sessions.confirmed_at)] : [];
     }),
   );
   const avgPrep = prepTimes.length ? Math.round(prepTimes.reduce((a, b) => a + b, 0) / prepTimes.length / 60000) : null;
@@ -97,8 +97,8 @@ function summarize(data: Data, now: number) {
 
   // Pedidos con platos sin terminar que superan el objetivo de cocina.
   const late = data.orders
-    .filter((o) => o.order_items.some((i) => i.status === "recibido" || i.status === "en_preparacion"))
-    .map((o) => ({ order: o, minutes: Math.floor((now - new Date(o.created_at).getTime()) / 60000) }))
+    .filter((o) => o.table_sessions.confirmed_at && o.order_items.some((i) => i.status === "recibido" || i.status === "en_preparacion"))
+    .map((o) => ({ order: o, minutes: Math.floor((now - kitchenStartTime(o.created_at, o.table_sessions.confirmed_at)) / 60000) }))
     .filter((l) => now > 0 && l.minutes > KITCHEN_TARGET_MINUTES)
     .sort((a, b) => b.minutes - a.minutes);
 

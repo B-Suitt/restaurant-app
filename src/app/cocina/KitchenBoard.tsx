@@ -16,6 +16,7 @@ import { extrasText, statusTime, tableLabel } from "@/lib/order-format";
 import { KITCHEN_TARGET_MINUTES } from "@/lib/restaurant";
 import { playChime } from "@/lib/shift-alerts";
 import { createClient } from "@/lib/supabase/client";
+import { kitchenStartTime } from "@/lib/table-status";
 import { formatAgo, formatClock, formatElapsed } from "@/lib/time-format";
 import { useLiveData } from "@/lib/use-live-data";
 import { useNow } from "@/lib/use-now";
@@ -40,10 +41,11 @@ async function loadItems() {
        dishes(name),
        order_item_extras(price, dish_extras(name)),
        order_item_events(status, changed_at),
-       orders!inner(number, created_at, table_sessions!inner(status, tables(number)))`,
+       orders!inner(number, created_at, table_sessions!inner(status, confirmed_at, tables(number)))`,
     )
     .in("status", COLUMNS)
-    .eq("orders.table_sessions.status", "open");
+    .eq("orders.table_sessions.status", "open")
+    .not("orders.table_sessions.confirmed_at", "is", null); // hasta que el garzón confirme la mesa
   if (error) throw error;
   return data.sort(
     (a, b) => a.orders.created_at.localeCompare(b.orders.created_at) || a.dishes.name.localeCompare(b.dishes.name, "es"),
@@ -166,7 +168,7 @@ function KitchenCard({ item, now, onChange }: { item: Item; now: number; onChang
   const { busy, error, run } = useRowAction(onChange);
 
   const status = item.status as KitchenStatus;
-  const arrived = new Date(item.orders.created_at).getTime();
+  const arrived = kitchenStartTime(item.orders.created_at, item.orders.table_sessions.confirmed_at);
   const elapsed = now - arrived;
   const isNew = status === "recibido" && elapsed < NEW_MINUTES * 60_000;
   const isLate = status !== "listo_para_entregar" && elapsed > KITCHEN_TARGET_MINUTES * 60_000;

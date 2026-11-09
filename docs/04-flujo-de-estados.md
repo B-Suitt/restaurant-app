@@ -37,7 +37,8 @@ Se calcula a partir de la sesión y los llamados; no se guarda como columna.
 | Estado | Condición |
 |---|---|
 | Libre | Sin sesión abierta, o sesión sin pedidos ni llamados pendientes |
-| Ocupada | Sesión abierta con al menos un pedido, sin llamados pendientes |
+| Por confirmar | Sesión con pedidos que el garzón aún no confirma, sin llamados pendientes |
+| Ocupada | Sesión confirmada con al menos un pedido, sin llamados pendientes |
 | Llamando | Llamado `call` pendiente |
 | Pidiendo la cuenta | Llamado `bill` pendiente |
 
