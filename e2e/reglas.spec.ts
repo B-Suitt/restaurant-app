@@ -98,9 +98,9 @@ test("cada rol ve su propia pantalla de acceso", async ({ stage }) => {
   expect((await admin.locator("aside").boundingBox())?.width).toBe(660);
 });
 
-test("el producto se llama Al Tiro", async ({ stage }) => {
+test("el producto se llama AltiroQR", async ({ stage }) => {
   const page = await stage.newPage("visitante");
   await page.goto("/");
-  await expect(page).toHaveTitle("Al Tiro");
-  await expect(page.getByRole("heading", { name: "Al Tiro" })).toBeVisible();
+  await expect(page).toHaveTitle("AltiroQR");
+  await expect(page.getByRole("heading", { name: "AltiroQR" })).toBeVisible();
 });

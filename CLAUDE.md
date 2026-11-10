@@ -1,4 +1,4 @@
-# Al Tiro
+# AltiroQR
 
 Plataforma web de autogestión de pedidos y administración de mesas para restaurantes.
 El cliente escanea un QR en su mesa, pide desde el celular y los pedidos llegan en

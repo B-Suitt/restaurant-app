@@ -4,7 +4,7 @@ Aterrizaje de la idea, alcance y reglas de negocio.
 
 ## Qué es
 
-Al Tiro es una plataforma web de autogestión de pedidos y administración de
+AltiroQR es una plataforma web de autogestión de pedidos y administración de
 mesas diseñada para optimizar la experiencia en restaurantes. Su objetivo principal es
 eliminar los tiempos de espera y centralizar la comunicación en tiempo real entre el
 cliente, los garzones y la cocina.
