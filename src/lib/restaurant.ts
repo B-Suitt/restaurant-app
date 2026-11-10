@@ -1,5 +1,5 @@
 // Datos fijos del local (MVP de un solo local).
-export const APP_NAME = "Al Tiro";
+export const APP_NAME = "AltiroQR";
 export const RESTAURANT_NAME = "Restaurante Central";
 
 /** Minutos desde que el pedido llega a cocina para considerarlo atrasado. */
