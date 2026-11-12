@@ -17,6 +17,7 @@ import { tableLabel } from "@/lib/order-format";
 import { errorMessage } from "@/lib/rpc-errors";
 import { matchesText } from "@/lib/search";
 import { createClient } from "@/lib/supabase/client";
+import { useOrderId } from "@/lib/use-order-id";
 import { WaiterHeader } from "../../../WaiterHeader";
 import { WaiterNav } from "../../../WaiterNav";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -35,6 +36,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const orderId = useOrderId();
 
   useEffect(() => {
     Promise.all([loadMenu(), createClient().from("tables").select("number").eq("id", tableId).single()])
@@ -62,13 +64,15 @@ export function AddOrder({ tableId }: { tableId: string }) {
     setSending(true);
     setError(null);
     const supabase = createClient();
+    const items = lines.map((l) => ({ dish_id: l.dish.id, quantity: l.quantity, note: note.trim(), extra_ids: [] }));
     // Abre la mesa si estaba libre o devuelve la sesión abierta.
     const session = await supabase.rpc("open_table", { p_table_id: tableId });
     const order = session.error
       ? session
       : await supabase.rpc("place_order", {
           p_session_id: session.data,
-          p_items: lines.map((l) => ({ dish_id: l.dish.id, quantity: l.quantity, note: note.trim(), extra_ids: [] })),
+          p_items: items,
+          p_order_id: orderId.idFor(items),
         });
     setSending(false);
     if (order.error) {
@@ -77,6 +81,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
       if (order.error.message === "dish_unavailable") loadMenu().then(setMenu).catch(() => {});
       return;
     }
+    orderId.reset();
     router.push(`/garzon/mesas/${tableId}`);
   }
 

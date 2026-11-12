@@ -13,6 +13,7 @@ import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
 import { extraLabel } from "@/lib/order-format";
 import { createClient } from "@/lib/supabase/client";
+import { useOrderId } from "@/lib/use-order-id";
 import { ClientNav } from "../ClientNav";
 import { WaiterCallActions } from "../WaiterCallActions";
 import { linePrice, tableLabel, useClientSession, type CartLine, type MenuDish } from "../ClientSessionProvider";
@@ -24,6 +25,7 @@ export function CartView() {
     useClientSession();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const orderId = useOrderId();
 
   // Al abrir el carrito se revisa la carta: un plato pudo agotarse mientras tanto.
   useEffect(() => {
@@ -37,9 +39,11 @@ export function CartView() {
   async function sendOrder() {
     setSending(true);
     setError(null);
+    const items = cart.map((l) => ({ dish_id: l.dishId, quantity: l.quantity, note: l.note, extra_ids: l.extraIds }));
     const { error: placeError } = await createClient().rpc("place_order", {
       p_session_id: sessionId,
-      p_items: cart.map((l) => ({ dish_id: l.dishId, quantity: l.quantity, note: l.note, extra_ids: l.extraIds })),
+      p_items: items,
+      p_order_id: orderId.idFor(items),
     });
     if (placeError) {
       setSending(false);
@@ -47,6 +51,7 @@ export function CartView() {
       setError(rpcError(placeError));
       return;
     }
+    orderId.reset();
     clearCart();
     router.push(`${basePath}/pedido`);
   }
