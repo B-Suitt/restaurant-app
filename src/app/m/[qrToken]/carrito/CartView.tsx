@@ -54,6 +54,9 @@ export function CartView() {
     }
     orderId.reset();
     clearCart();
+    // La página queda oculta pero viva al navegar (cacheComponents): sin esto, el próximo pedido
+    // encontraría el botón cargando.
+    setSending(false);
     router.push(`${basePath}/pedido`);
   }
 
