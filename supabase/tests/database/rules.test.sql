@@ -1,7 +1,7 @@
 -- Reglas de negocio y permisos. Correr con: npx supabase test db
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(46);
+select plan(48);
 
 -- ---------------------------------------------------------------------------
 -- Preparación (como postgres)
@@ -252,6 +252,20 @@ select tests.login('10000000-0000-0000-0000-0000000000a2');
 select throws_ok(
   format($$ select public.place_order(%L, '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]') $$, current_setting('t.s4')),
   'P0001', 'table_inactive', 'una mesa inactiva no recibe pedidos'
+);
+
+-- Reintentar un pedido con el mismo id no lo duplica.
+select tests.login('10000000-0000-0000-0000-0000000000a3');
+select public.place_order(current_setting('t.s2')::uuid,
+  '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]', '50000000-0000-0000-0000-000000000001');
+select is(
+  public.place_order(current_setting('t.s2')::uuid,
+    '[{"dish_id":"30000000-0000-0000-0000-000000000001","quantity":1}]', '50000000-0000-0000-0000-000000000001')::text,
+  '50000000-0000-0000-0000-000000000001', 'un reintento devuelve el mismo pedido'
+);
+select is(
+  (select count(*)::int from public.order_items where order_id = '50000000-0000-0000-0000-000000000001'),
+  1, 'un reintento no duplica los platos'
 );
 
 select tests.login('10000000-0000-0000-0000-000000000001'); -- garzón

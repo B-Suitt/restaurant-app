@@ -14,6 +14,7 @@ let mounts = 0;
  * - Carga recién cuando el canal queda SUBSCRIBED, y otra vez cuando Realtime ya escucha la base.
  * - Al reconectar vuelve a cargar, porque Realtime no reenvía lo ocurrido sin conexión.
  * - `live` es null mientras se conecta por primera vez, para no mostrar "Sin conexión" al abrir la vista.
+ * - Sin tablas no escucha cambios: solo carga (y recarga con `reload`).
  */
 export function useLiveData<T>(
   channelName: string,
@@ -31,11 +32,17 @@ export function useLiveData<T>(
     loadRef.current = load;
   });
 
+  // Si dos cargas se cruzan, solo vale la última pedida (p. ej. tras cambiar un filtro).
+  const latest = useRef(0);
   const reload = useCallback(async () => {
+    const request = ++latest.current;
     try {
-      setData(await loadRef.current());
+      const result = await loadRef.current();
+      if (request !== latest.current) return;
+      setData(result);
       setError(null);
     } catch (e) {
+      if (request !== latest.current) return;
       setError(e instanceof Error ? e.message : "error");
     }
   }, []);
@@ -53,7 +60,7 @@ export function useLiveData<T>(
 
     // Nombre único: con el mismo nombre, la librería reutilizaría el canal anterior mientras se cierra.
     let channel = supabase.channel(`${channelName}-${++mounts}`);
-    for (const table of tablesKey.split(",")) {
+    for (const table of tablesKey.split(",").filter(Boolean)) {
       channel = channel.on("postgres_changes", { event: "*", schema: "public", table }, scheduleReload);
     }
     // SUBSCRIBED llega antes de que Realtime escuche la base: lo ocurrido en ese intervalo se recupera aquí.

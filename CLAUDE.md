@@ -64,13 +64,12 @@ Seguir el mismo estilo visual para:
 - Desarrollo: `npm run dev`
 - Build: `npm run build`
 - Lint: `npm run lint`
-- Supabase local (requiere Docker Desktop abierto): `npx supabase start` · `npx supabase stop`
-- Reiniciar base con migraciones y datos de prueba: `npx supabase db reset`
-- Tests de base de datos: `npm run db:test`
-- Pruebas de navegador (requieren Supabase local y `npm run build`): `npm run test:e2e`
-- Regenerar tipos tras cambiar el esquema: `npm run db:types`
+- Supabase está en la nube (no hay base local ni Docker). Aplicar migraciones nuevas: `npx supabase db push`.
+- Tests de reglas de la base (`supabase/tests`): corren solo en el CI de GitHub (`npm run db:test`, que necesita Docker).
+- Regenerar tipos tras cambiar el esquema: `npm run db:types` (usa el proyecto enlazado en `supabase/.temp`)
 - Usuarios de prueba (contraseña `restaurante123`): `admin@`, `garzon@`, `cocina@restaurante.cl`.
-  QR de prueba: `/m/mesa-01?scan=1` … `/m/mesa-08?scan=1` (sin `?scan=1` se trata como recarga).
+  QR de prueba: los tokens son aleatorios; copiar el enlace desde Admin > Mesas y QR y agregar
+  `?scan=1` (sin él se trata como recarga).
 - Si en desarrollo faltan estilos de Tailwind (clases que no se aplican), detener `npm run dev`,
   borrar la carpeta `.next` y volver a iniciarlo: la caché de Turbopack puede quedar desactualizada.
 

@@ -103,9 +103,11 @@ function HistoryView({ today }: { today: string }) {
       .then(({ data }) => setTables(data ?? []));
   }, []);
 
+  // En vivo solo si el rango incluye hoy: un rango pasado no cambia y recargarlo en cada plato es caro.
+  const includesToday = applied.to >= today;
   const { data: orders, live, reload } = useLiveData(
     "admin-history",
-    ["orders", "order_items"],
+    includesToday ? ["orders", "order_items"] : [],
     () => loadHistory(applied),
   );
   // Al aplicar filtros nuevos, recarga con ellos.
@@ -126,7 +128,7 @@ function HistoryView({ today }: { today: string }) {
 
   return (
     <>
-      <AdminTopBar crumbs={[{ label: "Historial de pedidos" }]} live={live} />
+      <AdminTopBar crumbs={[{ label: "Historial de pedidos" }]} live={includesToday ? live : undefined} />
       <main className="flex flex-col gap-6 px-9 py-10">
         <AdminPageTitle
           title="Cada pedido, en su historia"

@@ -312,7 +312,7 @@ isOneToOne: false
 { Args: { "p_table_id": string }; Returns: string
                            },
 "place_order":
-{ Args: { "p_items": Json,"p_session_id": string }; Returns: string
+{ Args: { "p_items": Json,"p_order_id"?: string,"p_session_id": string }; Returns: string
                            },
 "set_item_status":
 { Args: { "p_item_id": string,"p_status": string }; Returns: undefined

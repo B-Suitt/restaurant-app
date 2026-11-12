@@ -11,10 +11,14 @@ export async function startShift() {
   audio ??= new AudioContext();
   await audio.resume();
   await keepScreenOn();
-  document.addEventListener("visibilitychange", () => {
-    // El navegador suelta el bloqueo al cambiar de pestaña; se pide de nuevo al volver.
-    if (document.visibilityState === "visible") keepScreenOn();
-  });
+  // El navegador suelta el bloqueo al cambiar de pestaña; se pide de nuevo al volver.
+  // Una sola vez aunque el turno se inicie varias veces.
+  document.removeEventListener("visibilitychange", onVisible);
+  document.addEventListener("visibilitychange", onVisible);
+}
+
+function onVisible() {
+  if (document.visibilityState === "visible") keepScreenOn();
 }
 
 async function keepScreenOn() {
