@@ -15,7 +15,11 @@ export function AppHeader({ title, subtitle, backHref, action }: AppHeaderProps)
   return (
     <header className="sticky top-0 z-10 flex h-19 shrink-0 items-center gap-3 border-b border-border bg-surface px-5">
       {backHref && (
-        <Link href={backHref} aria-label="Volver" className="-m-2 p-2 text-ink">
+        <Link
+          href={backHref}
+          aria-label="Volver"
+          className="-m-2 rounded-md p-2 text-ink hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-primary"
+        >
           <ArrowLeft className="size-5" aria-hidden />
         </Link>
       )}
@@ -28,11 +32,10 @@ export function AppHeader({ title, subtitle, backHref, action }: AppHeaderProps)
   );
 }
 
-/** Cuadro gris de 34 px para el icono de la cabecera. */
-export function HeaderIcon({ children, label }: { children: ReactNode; label?: string }) {
+/** Cuadro gris de 34 px para el icono decorativo de la cabecera. */
+export function HeaderIcon({ children }: { children: ReactNode }) {
   return (
     <span
-      aria-label={label}
       className="flex size-8.5 shrink-0 items-center justify-center rounded-md bg-surface-muted text-ink [&_svg]:size-4.5"
     >
       {children}

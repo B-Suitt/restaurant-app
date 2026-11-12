@@ -50,9 +50,16 @@ export function DishView() {
         }
       />
       <main className="flex flex-1 flex-col gap-4.5 p-5">
-        <DishPhoto src={dish.photo_url} alt={dish.name} className="aspect-[350/255] w-full" />
+        <DishPhoto
+          src={dish.photo_url}
+          alt={dish.name}
+          width={350}
+          height={255}
+          priority
+          className="aspect-[350/255] w-full"
+        />
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-2xl">{dish.name}</h2>
+          <h2 className="min-w-0 text-2xl break-words">{dish.name}</h2>
           <p className="shrink-0 text-xl">{formatPrice(dish.price)}</p>
         </div>
         {dish.description && <p className="text-base text-muted">{dish.description}</p>}
@@ -80,7 +87,14 @@ export function DishView() {
         )}
 
         <Field label="Nota para cocina" hint="Cuéntanos si necesitas algún ajuste.">
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Ej.: sin cebolla" />
+          <Textarea
+            name="note"
+            autoComplete="off"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={200}
+            placeholder="Ej.: sin cebolla…"
+          />
         </Field>
 
         <div className="flex items-center justify-between">
@@ -89,7 +103,7 @@ export function DishView() {
         </div>
 
         <Button
-          className="sticky bottom-20 shadow-lg"
+          className="sticky bottom-[calc(4.5rem+max(0.5rem,env(safe-area-inset-bottom)))] shadow-lg"
           disabled={!dish.available}
           onClick={() => {
             addToCart({ dishId: dish.id, quantity, note, extraIds });

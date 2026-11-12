@@ -69,7 +69,7 @@ export function MenuView() {
         )}
 
         {cartCount > 0 && (
-          <Link href={`${basePath}/carrito`} className={cn(buttonClasses(), "sticky bottom-20 shadow-lg")}>
+          <Link href={`${basePath}/carrito`} className={cn(buttonClasses(), "sticky bottom-[calc(4.5rem+max(0.5rem,env(safe-area-inset-bottom)))] shadow-lg")}>
             Ver carrito · {cartCount} {cartCount === 1 ? "producto" : "productos"} · {formatPrice(cartTotal)}
           </Link>
         )}
@@ -87,13 +87,15 @@ function DishRow({ dish, href }: { dish: MenuDish; href: string }) {
       <DishPhoto
         src={dish.photo_url}
         alt=""
+        width={112}
+        height={122}
         className={cn("h-30.5 w-28 shrink-0", !dish.available && "opacity-40")}
       />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <p className={cn("text-lg font-bold", !dish.available && "text-muted")}>{dish.name}</p>
+        <p className={cn("text-lg font-bold break-words", !dish.available && "text-muted")}>{dish.name}</p>
         {dish.description && <p className="line-clamp-2 text-sm text-muted">{dish.description}</p>}
         <div className="flex items-center justify-between">
-          <p className="text-[15px] leading-[1.4] font-bold">{formatPrice(dish.price)}</p>
+          <p className="text-[15px] leading-[1.4] font-bold tabular-nums">{formatPrice(dish.price)}</p>
           {dish.available ? (
             <span className="flex size-11 items-center justify-center rounded-md bg-primary-soft text-primary">
               <Plus className="size-6" aria-hidden />
@@ -114,7 +116,7 @@ function DishRow({ dish, href }: { dish: MenuDish; href: string }) {
           {content}
         </Link>
       ) : (
-        <div className="flex items-center gap-3.5" aria-label={`${dish.name}, agotado`}>
+        <div className="flex items-center gap-3.5">
           {content}
         </div>
       )}

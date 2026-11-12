@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { OfflineBanner } from "@/components/layout/OfflineBanner";
 import { APP_NAME } from "@/lib/restaurant";
@@ -12,6 +12,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: APP_NAME,
   description: "Pide desde tu mesa y sigue tu pedido en tiempo real.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff", // --color-surface
+  viewportFit: "cover", // permite usar env(safe-area-inset-*) en la barra inferior
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

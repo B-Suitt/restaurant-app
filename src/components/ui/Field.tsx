@@ -10,9 +10,10 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const control =
-  "w-full min-h-12 rounded-sm border border-border bg-surface p-3 text-base text-ink " +
-  "placeholder:text-muted outline-none transition-colors " +
-  "focus:border-ink aria-invalid:border-primary " +
+  // 16 px: con menos, iOS hace zoom al enfocar el campo.
+  "w-full min-h-12 rounded-sm border border-border bg-surface p-3 text-lg text-ink " +
+  "placeholder:text-muted outline-none transition-[border-color,box-shadow] " +
+  "focus-visible:border-ink focus-visible:ring-3 focus-visible:ring-primary/25 aria-invalid:border-primary " +
   "disabled:bg-surface-muted disabled:text-muted";
 
 type ControlProps = {

@@ -121,7 +121,7 @@ export function AddOrder({ tableId }: { tableId: string }) {
               <ul className="flex flex-col gap-3.5">
                 {visible.map((dish) => (
                   <li key={dish.id} className="flex items-center gap-3">
-                    <DishPhoto src={dish.photo_url} alt="" className={cn("size-21.5 shrink-0", !dish.available && "opacity-40")} />
+                    <DishPhoto src={dish.photo_url} alt="" width={86} height={86} className={cn("size-21.5 shrink-0", !dish.available && "opacity-40")} />
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <p className={cn("text-base font-bold", !dish.available && "text-muted")}>{dish.name}</p>
                       {dish.description && <p className="truncate text-sm text-muted">{dish.description}</p>}
