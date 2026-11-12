@@ -12,7 +12,8 @@ type NavItem = {
 /** Navegación inferior de las vistas móviles. */
 export function BottomNav({ items }: { items: NavItem[] }) {
   return (
-    <nav className="sticky bottom-0 z-10 flex h-17.5 shrink-0 items-center justify-between border-t border-border bg-surface px-5 pb-2">
+    // En iPhone sin botón de inicio, el relleno inferior deja libre la barra del sistema.
+    <nav className="sticky bottom-0 z-10 flex min-h-17.5 shrink-0 items-center justify-between border-t border-border bg-surface px-5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {items.map(({ label, icon: Icon, href, active }) => {
         const content = (
           <>
@@ -21,8 +22,10 @@ export function BottomNav({ items }: { items: NavItem[] }) {
           </>
         );
         const className = cn(
-          "flex w-24 flex-col items-center gap-1",
+          "flex w-24 flex-col items-center gap-1 rounded-md py-1",
+          "focus-visible:outline-2 focus-visible:outline-primary",
           active ? "text-primary" : "text-muted",
+          href && !active && "hover:text-ink",
           !href && "opacity-40",
         );
         return href ? (

@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, description, icon, children, class
       }}
       aria-labelledby={titleId}
       className={cn(
-        "m-auto w-[calc(100%-2.5rem)] max-w-87.5 rounded-xl bg-surface p-0 text-ink",
+        "m-auto w-[calc(100%-2.5rem)] max-w-87.5 overscroll-contain rounded-xl bg-surface p-0 text-ink",
         "backdrop:bg-overlay",
         className,
       )}

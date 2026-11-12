@@ -72,3 +72,25 @@ body {
   background: var(--color-surface);
   color: var(--color-ink);
 }
+
+@layer base {
+  html {
+    /* Toque: un gris suave en vez del azul del navegador. */
+    -webkit-tap-highlight-color: rgb(0 0 0 / 0.06);
+  }
+  /* Sin la espera del doble toque para hacer zoom. */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  summary {
+    touch-action: manipulation;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}

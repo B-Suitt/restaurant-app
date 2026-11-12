@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Utensils } from "lucide-react";
+import { Send, Trash2, Utensils } from "lucide-react";
 import { AppHeader, HeaderIcon } from "@/components/layout/AppHeader";
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { ErrorNote } from "@/components/ui/ErrorNote";
 import { InfoNote } from "@/components/ui/InfoNote";
+import { Modal } from "@/components/ui/Modal";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { cn } from "@/lib/cn";
 import { formatPrice } from "@/lib/format-price";
@@ -144,6 +145,8 @@ function CartRow({
     line.quantity > 1 && dish ? `${formatPrice(dish.price)} c/u` : "",
   ].filter(Boolean);
   const soldOut = !dish?.available;
+  const [confirming, setConfirming] = useState(false);
+  const name = dish?.name ?? "este plato";
 
   return (
     <li className="flex flex-col gap-2.5 border-b border-border py-3 first:pt-0">
@@ -151,19 +154,33 @@ function CartRow({
         <p className={cn("text-base", soldOut && "text-muted line-through")}>
           {line.quantity} × {dish?.name ?? "Plato no disponible"}
         </p>
-        <p className="text-base">{formatPrice(linePrice(line, dish))}</p>
+        <p className="text-base tabular-nums">{formatPrice(linePrice(line, dish))}</p>
       </div>
       {details.length > 0 && <p className="text-sm text-muted">{details.join(" · ")}</p>}
       <div className="flex items-center justify-between">
         <QuantityStepper value={line.quantity} onChange={onQuantity} label={`Cantidad de ${dish?.name ?? "plato"}`} />
         <button
           type="button"
-          onClick={onRemove}
+          onClick={() => setConfirming(true)}
           className="-mr-2 flex min-h-11 cursor-pointer items-center px-2 text-sm text-primary hover:underline"
         >
           Eliminar
         </button>
       </div>
+      {confirming && (
+        <Modal
+          open
+          onClose={() => setConfirming(false)}
+          icon={<Trash2 aria-hidden />}
+          title={`¿Quitar ${name} del carrito?`}
+          description="Puedes volver a agregarlo desde la carta."
+        >
+          <Button onClick={onRemove}>Sí, quitar</Button>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>
+            Mantener
+          </Button>
+        </Modal>
+      )}
     </li>
   );
 }

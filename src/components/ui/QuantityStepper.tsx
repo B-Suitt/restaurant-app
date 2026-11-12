@@ -13,7 +13,7 @@ type QuantityStepperProps = {
 /** Selector de cantidad: − 1 + */
 export function QuantityStepper({ value, onChange, min = 1, max = 50, label = "Cantidad" }: QuantityStepperProps) {
   const button =
-    "flex size-10 items-center justify-center text-ink disabled:text-subtle cursor-pointer disabled:cursor-default";
+    "flex size-11 items-center justify-center text-ink disabled:text-subtle cursor-pointer disabled:cursor-default";
   return (
     <div role="group" aria-label={label} className="inline-flex h-11 items-center rounded-sm border border-border bg-surface">
       <button type="button" className={button} onClick={() => onChange(value - 1)} disabled={value <= min} aria-label="Quitar uno">

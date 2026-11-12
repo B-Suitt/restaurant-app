@@ -58,7 +58,11 @@ export function OrderItemRow({ item, confirmText, showUnitPrice = false, waiting
           </button>
         )}
       </div>
-      {error && <p className="text-sm text-primary">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-primary">
+          {error}
+        </p>
+      )}
       {confirming && (
         <Modal
           open

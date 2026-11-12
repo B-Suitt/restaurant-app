@@ -311,7 +311,14 @@ export function DishForm({ dishId }: { dishId: string | null }) {
             <div className="flex flex-col gap-6">
               <Card className="flex flex-col gap-3 p-6">
                 <h2 className="text-xl font-bold">Fotografía</h2>
-                <DishPhoto src={shownPhoto} alt={name ? `Foto de ${name}` : ""} className="aspect-[4/3] w-full" />
+                <DishPhoto
+                  src={shownPhoto}
+                  alt={name ? `Foto de ${name}` : ""}
+                  width={390}
+                  height={293}
+                  priority
+                  className="aspect-[4/3] w-full"
+                />
                 <input
                   ref={fileInput}
                   type="file"

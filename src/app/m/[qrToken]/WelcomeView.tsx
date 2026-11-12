@@ -33,7 +33,14 @@ export function WelcomeView() {
       <main className="flex flex-1 flex-col gap-4.5 p-5">
         <BrandMark />
         {/* eslint-disable-next-line @next/next/no-img-element -- imagen de demo */}
-        <img src="/demo/bienvenida.jpg" alt="" className="aspect-[350/300] w-full rounded-lg object-cover" />
+        <img
+          src="/demo/bienvenida.jpg"
+          alt=""
+          width={350}
+          height={300}
+          fetchPriority="high"
+          className="aspect-[350/300] w-full rounded-lg object-cover"
+        />
         <p className="flex items-center gap-2 text-md uppercase text-primary">
           <ScanLine className="size-4.5" aria-hidden />
           {tableLabel(tableNumber)} · {zone}

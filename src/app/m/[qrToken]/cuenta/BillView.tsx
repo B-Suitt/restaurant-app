@@ -89,11 +89,11 @@ export function BillView() {
             <div className="flex flex-col gap-2 border-b border-border pb-3">
               <div className="flex justify-between gap-3 text-base">
                 <span className="text-muted">Subtotal</span>
-                <span>{formatPrice(total)}</span>
+                <span className="tabular-nums">{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between gap-3 text-sm text-muted">
                 <span>IVA incluido</span>
-                <span>{formatPrice(includedVat(total))}</span>
+                <span className="tabular-nums">{formatPrice(includedVat(total))}</span>
               </div>
             </div>
             <TotalRow label="Total" amount={total} />
@@ -101,11 +101,11 @@ export function BillView() {
               <div className="flex flex-col gap-2 border-t border-border pt-3 text-sm text-muted">
                 <div className="flex justify-between gap-3">
                   <span>Propina sugerida ({SUGGESTED_TIP_RATE * 100}%, voluntaria)</span>
-                  <span>{formatPrice(tip)}</span>
+                  <span className="tabular-nums">{formatPrice(tip)}</span>
                 </div>
                 <div className="flex justify-between gap-3">
                   <span>Total con propina</span>
-                  <span>{formatPrice(total + tip)}</span>
+                  <span className="tabular-nums">{formatPrice(total + tip)}</span>
                 </div>
               </div>
             )}
@@ -127,7 +127,7 @@ function BillLine({ label, amount }: { label: string; amount: number }) {
   return (
     <li className="flex items-start justify-between gap-3 text-base">
       <span>{label}</span>
-      <span className="shrink-0 font-bold">{formatPrice(amount)}</span>
+      <span className="shrink-0 font-bold tabular-nums">{formatPrice(amount)}</span>
     </li>
   );
 }

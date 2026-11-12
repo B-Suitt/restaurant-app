@@ -12,16 +12,17 @@ type FilterTabsProps<T extends string | null> = {
 /** Filtros en píldora (Todo / Fondos / Bebidas…): la opción activa en negro. */
 export function FilterTabs<T extends string | null>({ options, value, onChange, label }: FilterTabsProps<T>) {
   return (
-    <div className="flex flex-wrap gap-1.75" role="tablist" aria-label={label}>
+    // Botones de filtro (no pestañas): no controlan paneles ni se navegan con flechas.
+    <div className="flex flex-wrap gap-1.75" role="group" aria-label={label}>
       {options.map((option) => (
         <button
           key={option.value ?? "all"}
           type="button"
-          role="tab"
-          aria-selected={value === option.value}
+          aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
             "cursor-pointer rounded-full px-3.25 py-2.5 text-sm font-semibold transition-colors",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
             value === option.value ? "bg-ink text-white" : "bg-surface-muted text-muted hover:text-ink",
           )}
         >

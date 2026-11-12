@@ -145,7 +145,7 @@ export function MenuAdmin() {
                   <TableRow key={dish.id}>
                     <TableCell className="py-3">
                       <div className="flex flex-col gap-1.5">
-                        <DishPhoto src={dish.photo_url} alt="" className="h-20 w-32.5" />
+                        <DishPhoto src={dish.photo_url} alt="" width={130} height={80} className="h-20 w-32.5" />
                         <p className="text-base font-bold">{dish.name}</p>
                         <p className="text-xs text-muted">
                           {category?.name}
