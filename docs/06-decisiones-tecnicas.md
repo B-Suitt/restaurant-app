@@ -22,6 +22,7 @@ Registro de decisiones con fecha y motivo, para no volver a discutirlas.
 | 2026-11-06 | Carrito guardado en el navegador por sesión de mesa | Sobrevive a recargas; cada celular arma su propio carrito |
 | 2026-11-09 | La mesa se ve ocupada desde el primer pedido o llamado, no desde el escaneo | Abrir o recargar el enlace no debe ocupar una mesa; la sesión vacía se reutiliza |
 | 2026-11-09 | El QR impreso lleva `?scan=1` y la app lo quita al entrar | Distingue un escaneo de una recarga para no abrir otra estadía tras el cierre. No es seguridad: una foto del QR sigue funcionando |
+| 2026-11-12 | Se deja Supabase local: desarrollo contra la base en la nube; se eliminan las pruebas de Playwright | Simplificar el entorno (sin Docker). Los tests de reglas de la base siguen, pero corren solo en el CI de GitHub |
 
 ## Notas de implementación
 
