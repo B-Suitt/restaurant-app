@@ -21,8 +21,12 @@ import { ErrorNote } from "@/components/ui/ErrorNote";
 type Table = { number: number; zone: string; qr_token: string; active: boolean };
 type Format = "png" | "svg";
 
-/** Dirección que abre el QR: la carta de la mesa en este mismo sitio. `scan` distingue un escaneo de una recarga. */
-const qrUrl = (token: string) => `${window.location.origin}/m/${encodeURIComponent(token)}?scan=1`;
+/**
+ * Dirección que abre el QR: la carta de la mesa. El dominio sale de NEXT_PUBLIC_QR_BASE_URL
+ * (p. ej. https://demo.altiroqr.cl) y, si no está, de este mismo sitio. `scan` distingue un escaneo de una recarga.
+ */
+const qrBase = () => (process.env.NEXT_PUBLIC_QR_BASE_URL || window.location.origin).replace(/\/+$/, "");
+const qrUrl = (token: string) => `${qrBase()}/m/${encodeURIComponent(token)}?scan=1`;
 
 // Frame "Administrador · Código QR de la mesa"
 export function TableQr({ tableId }: { tableId: string }) {
